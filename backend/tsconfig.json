@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",                        // JavaScript version output
+    "module": "commonjs",                      // Module system (use "ESNext" for modern ESM)
+    "rootDir": "./src",                        // Root folder of source files
+    "outDir": "./dist",                        // Output folder for compiled JS
+    "strict": true,                            // Enable all strict type-checking options
+    "esModuleInterop": true,                   // Enable default imports for CommonJS modules
+    "forceConsistentCasingInFileNames": true,  // Enforce consistent file name casing
+    "skipLibCheck": true                       // Skip type checking of declaration files
+  },
+  "include": ["src"],                          // Files to include in compilation
+  "exclude": ["node_modules", "dist"]          // Files/folders to exclude
+}

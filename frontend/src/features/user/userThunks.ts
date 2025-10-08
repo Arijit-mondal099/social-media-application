@@ -1,0 +1,188 @@
+import { axiosInstance } from "@/lib/axios";
+import { IAuth, IAuthResponse, IPost } from "@/types";
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { AxiosError } from "axios";
+
+interface IPostData {
+  image?: File;
+  video?: File;
+  text?: string;
+  tags: string[];
+}
+
+interface IResponsePost {
+  success: boolean;
+  message: string;
+  post?: IPost;
+  posts?: IPost[];
+}
+
+export const register = createAsyncThunk<
+  IAuthResponse,
+  IAuth,
+  { rejectValue: string }
+>("user/register", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post<IAuthResponse>(
+      "/users/register",
+      data
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Registration failed"
+    );
+  }
+});
+
+export const login = createAsyncThunk<
+  IAuthResponse,
+  IAuth,
+  { rejectValue: string }
+>("user/login", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post<IAuthResponse>(
+      "/users/login",
+      data
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(error.response?.data?.message || "Login failed");
+  }
+});
+
+export const profile = createAsyncThunk<
+  IAuthResponse,
+  void,
+  { rejectValue: string }
+>("user/profile", async (_, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get<IAuthResponse>("/users", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch profile"
+    );
+  }
+});
+
+export const textPost = createAsyncThunk<
+  IResponsePost,
+  IPostData,
+  { rejectValue: string }
+>("user/textPost", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post<IResponsePost>(
+      "/posts/text",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Registration failed"
+    );
+  }
+});
+
+export const imagePost = createAsyncThunk<
+  IResponsePost,
+  FormData,
+  { rejectValue: string }
+>("user/imagePost", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post<IResponsePost>(
+      "/posts/image",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Registration failed"
+    );
+  }
+});
+
+export const videoPost = createAsyncThunk<
+  IResponsePost,
+  FormData,
+  { rejectValue: string }
+>("user/videoPost", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post<IResponsePost>(
+      "/posts/video",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Registration failed"
+    );
+  }
+});
+
+export const getUserPosts = createAsyncThunk<
+  IResponsePost,
+  void,
+  { rejectValue: string }
+>("user/getUserPosts", async (_, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get<IResponsePost>("/users/posts", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch user posts"
+    );
+  }
+});
+
+export const deletePost = createAsyncThunk<
+  string,
+  { id: string },
+  { rejectValue: string }
+>("user/deletePost", async (data, { rejectWithValue }) => {
+  try {
+    await axiosInstance.delete(`/posts/${data.id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return data.id;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to delete user posts"
+    );
+  }
+});
