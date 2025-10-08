@@ -22,6 +22,7 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { ThemeProvider } from "./components/layout/theme-provider";
 import { profile } from "./features/user/userThunks";
+import { EditProfile } from "./components/common/EditProfile";
 
 const AppRoutes: React.FC = () => {
   const { token, authChecking } = useAppSelector((state) => state.user);
@@ -125,6 +126,21 @@ const AppRoutes: React.FC = () => {
                       transition={{ duration: 0.3 }}
                     >
                       <SettingsPage />
+                    </motion.div>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/edit-profile"
+                element={
+                  <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <EditProfile />
                     </motion.div>
                   </Layout>
                 }

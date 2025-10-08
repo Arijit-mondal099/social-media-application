@@ -1,64 +1,74 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  User, 
-  Bell, 
-  Shield, 
-  Moon, 
-  Sun, 
-  Globe, 
-  HelpCircle, 
+import React, { useCallback } from "react";
+import { motion } from "framer-motion";
+import {
+  User,
   LogOut,
-  ChevronRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useAppSelector } from '@/hooks/useAppSelector';
+  ChevronRight,
+  Palette,
+  TriangleAlert,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { logout } from "@/features/user/userSlice";
+import { ModeToggle } from "@/components/layout/mode-toggle";
+import { useTheme } from "next-themes";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { useNavigate } from "react-router-dom";
 
 export const SettingsPage: React.FC = () => {
-  const {  } = useAppSelector(state => state.user);
+  const { theme } = useTheme();
+  const dispatch = useAppDispatch();
+  const nvaigate = useNavigate();
+
+  const handleLogout = useCallback(() => {
+    const isConfirm = window.confirm("Are you sure you want to sign out?");
+    if (isConfirm) {
+      dispatch(logout());
+      localStorage.removeItem("token");
+      nvaigate("/login");
+    }
+  }, [dispatch, nvaigate]);
 
   const settingSections = [
     {
-      title: 'Account',
+      title: "Account",
       icon: User,
       items: [
-        { label: 'Edit Profile', description: 'Update your profile information' },
-        { label: 'Privacy', description: 'Control your privacy settings' },
-        { label: 'Security', description: 'Password and security options' },
-      ],
-    },
-    {
-      title: 'Notifications',
-      icon: Bell,
-      items: [
-        { label: 'Push Notifications', description: 'Receive notifications on your device', toggle: true },
-        { label: 'Email Notifications', description: 'Receive email updates', toggle: true },
-        { label: 'SMS Notifications', description: 'Receive SMS alerts', toggle: false },
-      ],
-    },
-    {
-      title: 'Appearance',
-      icon: theme === 'light' ? Sun : Moon,
-      items: [
-        { 
-          label: 'Theme', 
-          description: `Currently using ${theme} mode`,
-          action: toggleTheme,
-          toggle: theme === 'dark'
+        {
+          label: "Edit Profile",
+          description: "Update your profile information",
+          redirect: "/edit-profile",
+        },
+        {
+          label: "Privacy",
+          description: "Control your privacy settings",
+          redirect: "/settings",
+        },
+        {
+          label: "Security",
+          description: "Password and security options",
+          redirect: "/settings",
         },
       ],
     },
     {
-      title: 'Support',
-      icon: HelpCircle,
+      title: "Appearance",
+      icon: Palette,
       items: [
-        { label: 'Help Center', description: 'Get help and support' },
-        { label: 'Contact Us', description: 'Reach out to our support team' },
-        { label: 'Terms of Service', description: 'Read our terms and conditions' },
-        { label: 'Privacy Policy', description: 'Learn about our privacy practices' },
+        {
+          label: "Theme",
+          description: `Currently using ${theme ?? "system"} mode`,
+          component: <ModeToggle />,
+          redirect: "/settings",
+        },
       ],
     },
   ];
@@ -95,11 +105,12 @@ export const SettingsPage: React.FC = () => {
                   <span>{section.title}</span>
                 </CardTitle>
               </CardHeader>
+
               <CardContent className="space-y-4">
                 {section.items.map((item, itemIndex) => (
                   <div key={item.label}>
                     <div className="flex items-center justify-between py-2">
-                      <div className="flex-1">
+                      <div className="flex-1 text-left">
                         <Label className="text-base font-medium">
                           {item.label}
                         </Label>
@@ -109,19 +120,21 @@ export const SettingsPage: React.FC = () => {
                           </p>
                         )}
                       </div>
+
                       <div className="flex items-center space-x-2">
-                        {/* {item.toggle !== undefined ? (
-                          <Switch
-                            checked={item.toggle}
-                            onCheckedChange={item.action}
-                          />
+                        {section.title === "Appearance" ? (
+                          <ModeToggle />
                         ) : (
                           <Button variant="ghost" size="sm">
-                            <ChevronRight className="w-4 h-4" />
+                            <ChevronRight
+                              className="w-4 h-4"
+                              onClick={() => nvaigate(item.redirect)}
+                            />
                           </Button>
-                        )} */}
+                        )}
                       </div>
                     </div>
+
                     {itemIndex < section.items.length - 1 && <Separator />}
                   </div>
                 ))}
@@ -130,7 +143,6 @@ export const SettingsPage: React.FC = () => {
           </motion.div>
         ))}
 
-        {/* Danger Zone */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -138,14 +150,18 @@ export const SettingsPage: React.FC = () => {
         >
           <Card className="border-destructive/50">
             <CardHeader>
-              <CardTitle className="text-destructive">Danger Zone</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-destructive flex items-center gap-2">
+                <TriangleAlert />
+                Danger Zone
+              </CardTitle>
+              <CardDescription className="text-left">
                 These actions cannot be undone. Please be careful.
               </CardDescription>
             </CardHeader>
+
             <CardContent>
               <div className="flex items-center justify-between">
-                <div>
+                <div className="text-left">
                   <Label className="text-base font-medium">Sign Out</Label>
                   <p className="text-sm text-muted-foreground mt-1">
                     Sign out of your account on this device
@@ -153,7 +169,7 @@ export const SettingsPage: React.FC = () => {
                 </div>
                 <Button
                   variant="destructive"
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="flex items-center space-x-2"
                 >
                   <LogOut className="w-4 h-4" />
