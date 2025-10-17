@@ -49,13 +49,13 @@ export const SettingsPage: React.FC = () => {
         },
         {
           label: "Privacy",
-          description: "Control your privacy settings",
-          redirect: "/settings",
+          description: "Control your privacy settings & Email",
+          redirect: "/privacy",
         },
         {
           label: "Security",
           description: "Password and security options",
-          redirect: "/settings",
+          redirect: "/security",
         },
       ],
     },

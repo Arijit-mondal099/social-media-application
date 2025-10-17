@@ -11,7 +11,6 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { CreatePostModal } from "@/components/modals/CreatePostModal";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
-import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 import { FeedPage } from "@/pages/FeedPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { ExplorePage } from "@/pages/ExplorePage";
@@ -21,8 +20,10 @@ import { Toaster } from "sonner";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { ThemeProvider } from "./components/layout/theme-provider";
-import { profile } from "./features/user/userThunks";
-import { EditProfile } from "./components/common/EditProfile";
+import { profile } from "@/features/user/userThunks";
+import { EditProfile } from "@/components/common/EditProfile";
+import { EditEmail } from "@/components/common/EditEmail";
+import { EditPassword } from "@/components/common/EditPassword";
 
 const AppRoutes: React.FC = () => {
   const { token, authChecking } = useAppSelector((state) => state.user);
@@ -49,7 +50,6 @@ const AppRoutes: React.FC = () => {
             <>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </>
           ) : (
@@ -141,6 +141,36 @@ const AppRoutes: React.FC = () => {
                       transition={{ duration: 0.3 }}
                     >
                       <EditProfile />
+                    </motion.div>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/security"
+                element={
+                  <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <EditPassword />
+                    </motion.div>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <EditEmail />
                     </motion.div>
                   </Layout>
                 }

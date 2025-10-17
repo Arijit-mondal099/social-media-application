@@ -5,7 +5,13 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
@@ -131,9 +137,9 @@ export const LoginPage = () => {
                       className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 bg-white dark:bg-gray-900 focus-visible:ring-0"
                     >
                       {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
                         <Eye className="w-4 h-4" />
+                      ) : (
+                        <EyeOff className="w-4 h-4" />
                       )}
                     </Button>
                   </div>

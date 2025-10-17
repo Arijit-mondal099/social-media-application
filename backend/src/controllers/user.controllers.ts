@@ -3,8 +3,8 @@ import { User } from "../models/user.model";
 import { generateUsername } from "../utils/generateUsername";
 import { generateToken } from "../utils/generateToken";
 import { AuthRequest } from "../middlewares/auth";
-import { imagekit } from "../configs/imagekit";
 import { Post } from "../models/post.model";
+import { uploadFile } from "../utils/uploadToImagekit";
 
 /**
  * ROUTE: /api/v1/users/register
@@ -123,11 +123,7 @@ export const updateProfileImage = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const result = await imagekit.upload({
-      file: file.buffer,
-      fileName: file.originalname,
-      folder: "/friends",
-    });
+    const result = await uploadFile(file, "/friends");
 
     if (!result.url) {
       return res.status(400).json({
@@ -151,7 +147,7 @@ export const updateProfileImage = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "User profile image updated successfully",
-      url: result.url,
+      url: user.profileImage,
     });
   } catch (error) {
     console.error("user update profile image error", error);
@@ -169,7 +165,7 @@ export const updateProfileImage = async (req: AuthRequest, res: Response) => {
  */
 export const updateProfileInfo = async (req: AuthRequest, res: Response) => {
   try {
-    const { bio, link } = req.body;
+    const { name, username, bio, link } = req.body;
     const userId = req?.user?._id;
 
     const user = await User.findById(userId);
@@ -181,16 +177,140 @@ export const updateProfileInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    user.name = name || user.name;
     user.bio = bio || user.bio;
     user.link = link || user.link;
+
+    if (username && username !== user.username) {
+      const isUsernameUsed = await User.findOne({ username: username });
+
+      if (isUsernameUsed) {
+        return res.status(400).json({
+          success: false,
+          message: "Username alredy used!",
+        });
+      }
+
+      user.username = username;
+    }
+
     await user.save();
 
     return res.status(200).json({
       success: true,
       message: "Profile updated succcessfully",
+      user: {
+        name: user.name,
+        username: user.username,
+        link: user.link,
+        bio: user.bio,
+      },
     });
   } catch (error) {
     console.error("user update profile info error", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      error: error,
+    });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/users/change-email
+ * METHOD: PUT
+ */
+export const changeEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const { email } = req.body;
+    const userId = req.user?._id;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an valid email address!",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Oops user not found please login again!",
+      });
+    }
+
+    const isEmailUsed = await User.findOne({ email });
+
+    if (isEmailUsed) {
+      return res.status(400).json({
+        success: false,
+        message: "Oops email alredy used try another one!",
+      });
+    }
+
+    user.email = email;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email changed successfully",
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Error while changeing email", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      error: error,
+    });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/users/change-password
+ * METHOD: PUT
+ */
+export const changePassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user?._id;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide old & new password!",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Oops user not found please login again!",
+      });
+    }
+
+    const isPasswordMatched = await user.comparePassword(oldPassword);
+
+    if (!isPasswordMatched) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid old password!",
+      });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Error while changeing password", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error!",

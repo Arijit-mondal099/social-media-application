@@ -8,6 +8,10 @@ import {
   profile,
   register,
   textPost,
+  updateEmail,
+  updatePassword,
+  updateProfile,
+  updateProfileImage,
   videoPost,
 } from "./userThunks";
 
@@ -144,12 +148,70 @@ const counterSlice = createSlice({
       .addCase(deletePost.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.posts = state.posts.filter(p => p._id !== action.payload);
+        state.posts = state.posts.filter((p) => p._id !== action.payload);
       })
       .addCase(deletePost.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
+      // update user profile
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.user = {
+          ...state.user,
+          ...action.payload.user,
+        };
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // update user profile image
+      .addCase(updateProfileImage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfileImage.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.user = { ...state.user, profileImage: action.payload.url };
+      })
+      .addCase(updateProfileImage.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // update user email
+      .addCase(updateEmail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateEmail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.user = { ...state.user, email: action.payload.email };
+      })
+      .addCase(updateEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // change password
+      .addCase(updatePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updatePassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(updatePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 

@@ -186,3 +186,100 @@ export const deletePost = createAsyncThunk<
     );
   }
 });
+
+export const updateProfile = createAsyncThunk<
+  {
+    success: boolean;
+    message: string;
+    user: { name: string; username: string; link: string; bio: string };
+  },
+  { name: string; username: string; link: string; bio: string },
+  { rejectValue: string }
+>("user/updateProfile", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(
+      "/users/updateprofile-info",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to update profile"
+    );
+  }
+});
+
+export const updateProfileImage = createAsyncThunk<
+  { success: boolean; message: string; url: string },
+  FormData,
+  { rejectValue: string }
+>("user/updateProfileImage", async (file, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(
+      "/users/updateprofile-image",
+      file,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to update profile image"
+    );
+  }
+});
+
+export const updateEmail = createAsyncThunk<
+  { success: boolean; message: string; email: string },
+  { email: string },
+  { rejectValue: string }
+>("user/updateEmail", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put("/users/change-email", data, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to update email"
+    );
+  }
+});
+
+export const updatePassword = createAsyncThunk<
+  object,
+  { oldPassword: string; newPassword: string },
+  { rejectValue: string }
+>("user/updatePassword", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put("/users/change-password", data, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to change password"
+    );
+  }
+});
