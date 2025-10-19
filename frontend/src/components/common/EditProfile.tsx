@@ -28,6 +28,7 @@ export const EditProfile: React.FC = () => {
     link: "",
     bio: "",
   });
+  const [isInputChanged, setIsInputChanged] = useState<boolean>(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string>("");
   const dispatch = useAppDispatch();
@@ -35,6 +36,7 @@ export const EditProfile: React.FC = () => {
   const handleChnage = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    setIsInputChanged(false);
     setFormState({ ...formState, [e.target.name]: e.target.value });
   };
 
@@ -44,6 +46,7 @@ export const EditProfile: React.FC = () => {
 
     const imageUrl = URL.createObjectURL(file);
     setPreviewImage(imageUrl);
+    setIsInputChanged(false);
     setImageFile(file);
   };
 
@@ -193,7 +196,11 @@ export const EditProfile: React.FC = () => {
               </div>
             </div>
 
-            <Button className="w-full" type="submit" disabled={loading}>
+            <Button
+              className="w-full disabled:opacity-40 disabled:cursor-pointer"
+              type="submit"
+              disabled={loading || isInputChanged}
+            >
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="animate-spin w-4 h-4" /> Updating...
