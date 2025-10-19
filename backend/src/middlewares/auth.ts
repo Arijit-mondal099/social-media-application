@@ -13,7 +13,9 @@ export interface AuthRequest extends Request {
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.token || req.headers["authorization"]?.replace("Bearer ", "");
+    const token =
+      req.cookies?.token ||
+      req.headers["authorization"]?.replace("Bearer ", "");
 
     if (!token) {
       return res.status(401).json({
@@ -22,7 +24,10 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    const decodeToken = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload & { id: string };
+    const decodeToken = jwt.verify(
+      token,
+      process.env.JWT_SECRET!
+    ) as JwtPayload & { id: string };
     const user = await User.findById(decodeToken?.id);
 
     if (!user) {
@@ -41,6 +46,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
 
     return next();
   } catch (error) {
+    console.log("Auth Error", error);
     return res.status(401).json({
       success: false,
       message: "Unauthorized user token not provided or invalid!",

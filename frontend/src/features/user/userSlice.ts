@@ -79,7 +79,6 @@ const counterSlice = createSlice({
         state.authChecking = false;
         state.user = action.payload.user!;
         localStorage.setItem("user", JSON.stringify(state.user));
-        console.log(state.user)
       })
       .addCase(profile.rejected, (state, action) => {
         state.authChecking = false;

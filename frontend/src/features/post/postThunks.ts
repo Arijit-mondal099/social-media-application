@@ -25,6 +25,14 @@ interface IResponseFeed {
   };
 }
 
+interface ILikePostResponse {
+  success: boolean;
+  message: string;
+  flag: boolean;
+  userId: string;
+  postId: string;
+}
+
 export const getUserFeed = createAsyncThunk<
   IResponseFeed,
   void,
@@ -41,6 +49,30 @@ export const getUserFeed = createAsyncThunk<
     const error = err as AxiosError<{ message: string }>;
     return rejectWithValue(
       error.response?.data?.message || "Fetching feed failed"
+    );
+  }
+});
+
+export const likeToAnPost = createAsyncThunk<
+  ILikePostResponse,
+  string,
+  { rejectValue: string }
+>("post/likeToAnPost", async (postId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put<ILikePostResponse>(
+      `/posts/${postId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Faild to like or unlike the post"
     );
   }
 });

@@ -75,6 +75,15 @@ export const imagePost = async (req: AuthRequest, res: Response) => {
         .json({ success: false, message: "Text or file hasn't provided!" });
     }
 
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: user not found!",
+      });
+    }
+
     const result = await uploadFile(file, "/friends");
 
     if (!result.url) {
@@ -92,21 +101,21 @@ export const imagePost = async (req: AuthRequest, res: Response) => {
       tags,
     });
 
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: user not found!",
-      });
-    }
-
     user.posts.push(post._id as mongoose.Types.ObjectId);
     await user.save();
 
-    return res
-      .status(201)
-      .json({ success: true, message: "Post created", post });
+    return res.status(201).json({
+      success: true,
+      message: "Post created",
+      post: {
+        ...post.toObject(),
+        createdBy: {
+          name: user.name,
+          profileImage: user.profileImage,
+          username: user.username,
+        },
+      },
+    });
   } catch (error) {
     console.error("Image post error", error);
     return res
@@ -131,6 +140,15 @@ export const videoPost = async (req: AuthRequest, res: Response) => {
         .json({ success: false, message: "Text or file hasn't provided!" });
     }
 
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: user not found!",
+      });
+    }
+
     const result = await uploadFile(file, "/friends");
 
     if (!result.url) {
@@ -148,21 +166,21 @@ export const videoPost = async (req: AuthRequest, res: Response) => {
       tags,
     });
 
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: user not found!",
-      });
-    }
-
     user.posts.push(post._id as mongoose.Types.ObjectId);
     await user.save();
 
-    return res
-      .status(201)
-      .json({ success: true, message: "Post created", post });
+    return res.status(201).json({
+      success: true,
+      message: "Post created",
+      post: {
+        ...post.toObject(),
+        createdBy: {
+          name: user.name,
+          profileImage: user.profileImage,
+          username: user.username,
+        },
+      },
+    });
   } catch (error) {
     console.error("Video post error", error);
     return res
@@ -175,7 +193,7 @@ export const videoPost = async (req: AuthRequest, res: Response) => {
  * ROUTE: /api/v1/posts/:id
  * METHOD: PUT
  */
-export const likeToPost = async (req: AuthRequest, res: Response) => {
+export const toggleLikeToAnPost = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id;
@@ -191,7 +209,7 @@ export const likeToPost = async (req: AuthRequest, res: Response) => {
     if (String(post.createdBy) === userId?.toString()) {
       return res
         .status(400)
-        .json({ success: false, message: "You can't like your own post" });
+        .json({ success: false, message: "You can't like to your own post!" });
     }
 
     if (!userId) {
@@ -205,14 +223,30 @@ export const likeToPost = async (req: AuthRequest, res: Response) => {
     );
 
     if (isUserLikedPost) {
-      // Unlike
+      // disliked
       await Post.updateOne({ _id: id }, { $pull: { likes: userId } });
-      return res.status(200).json({ success: true, message: "Post unliked" });
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Post disliked",
+          postId: id,
+          userId,
+          flag: false,
+        });
     } else {
       // Like
       post.likes.push(new mongoose.Types.ObjectId(userId));
       await post.save();
-      return res.status(200).json({ success: true, message: "Post liked" });
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Post liked",
+          postId: id,
+          userId,
+          flag: true,
+        });
     }
   } catch (error) {
     console.error("Like post error", error);

@@ -29,8 +29,6 @@ export const FeedPage: React.FC = () => {
     dispatch(getUserFeed());
   }, [dispatch]);
 
-  console.log(posts);
-
   return (
     <motion.div
       initial={{ opacity: 0 }}

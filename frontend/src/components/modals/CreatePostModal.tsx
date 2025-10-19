@@ -201,16 +201,16 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="min-h-[120px] resize-none border-none focus:ring-0 text-base"
-            maxLength={280}
+            maxLength={2000}
           />
 
           <div className="flex justify-end">
             <span
               className={`text-xs ${
-                content.length > 250 ? "text-red-500" : "text-muted-foreground"
+                content.length > 500 ? "text-red-500" : "text-muted-foreground"
               }`}
             >
-              {content.length}/280
+              {content.length}/2000
             </span>
           </div>
 

@@ -81,7 +81,9 @@ export const AutoPlayVideo: React.FC<AutoPlayVideoProps> = ({ src, text }) => {
 
       {/* Optional caption/text */}
       {text && (
-        <p className="text-left text-sm font-medium mt-2 px-1">{text}</p>
+        <p className="w-full max-w-lg text-left whitespace-pre-wrap break-words">
+          {text}
+        </p>
       )}
     </div>
   );

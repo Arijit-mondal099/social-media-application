@@ -14,6 +14,10 @@ import { Button } from "../ui/button";
 import { AutoPlayVideo } from "./AutoPlayVideo";
 import ConfirmModal from "../modals/ConfirmModal";
 import { defaultProfileImage } from "@/assets";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { likeToAnPost } from "@/features/post/postThunks";
+import { toast } from "sonner";
+import { useAppSelector } from "@/hooks/useAppSelector";
 
 interface PostCardProps {
   post: IPost;
@@ -23,6 +27,19 @@ interface PostCardProps {
 }
 
 export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
+  const { user } = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
+
+  const isUserLikedPost = post.likes.includes(user?._id || "");
+
+  const handleLikeToggleToPost = async (postId: string) => {
+    const res = await dispatch(likeToAnPost(postId));
+
+    if (!likeToAnPost.fulfilled.match(res)) {
+      toast.success(res.payload || "Unable to like the post");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
@@ -84,7 +101,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
         <CardContent>
           {post.postType === "text" && (
-            <p className="w-full max-w-lg text-left">{post.text}</p>
+            <p className="w-full max-w-lg text-left whitespace-pre-wrap break-words">
+              {post.text}
+            </p>
           )}
 
           {post.postType === "image" && (
@@ -94,7 +113,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
                 alt={post._id}
                 className="w-full h-full rounded-lg"
               />
-              <p className="text-left text-sm font-medium">{post.text}</p>
+              <p className="w-full max-w-lg text-left whitespace-pre-wrap break-words">
+                {post.text}
+              </p>
             </div>
           )}
 
@@ -108,9 +129,11 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="flex items-center gap-2 bg-white dark:bg-black 
-               border-muted hover:border-muted 
-               hover:text-red-500 transition-colors duration-300"
+                className={`flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted 
+               hover:text-red-500 transition-colors duration-300 ${
+                 isUserLikedPost ? "text-red-500" : ""
+               }`}
+                onClick={() => handleLikeToggleToPost(post._id)}
               >
                 <Heart className="w-4 h-4" />
                 <span>{post.likes.length ? post.likes.length : "Like"}</span>
@@ -118,18 +141,16 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
               <Button
                 variant="outline"
-                className="flex items-center gap-2 bg-white dark:bg-black 
-               border-muted hover:border-muted 
+                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted 
                hover:text-blue-500 transition-colors duration-300"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>14</span>
+                <span>0</span>
               </Button>
 
               <Button
                 variant="outline"
-                className="flex items-center gap-2 bg-white dark:bg-black 
-               border-muted hover:border-muted 
+                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted 
                hover:text-blue-500 transition-colors duration-300"
               >
                 <Share className="w-4 h-4" />

@@ -1,7 +1,14 @@
 import { Router } from "express";
 import { auth } from "../middlewares/auth";
 import { upload } from "../middlewares/multer";
-import { deletePost, imagePost, textPost, userPostFeed, videoPost } from "../controllers/post.controllers";
+import {
+  deletePost,
+  imagePost,
+  textPost,
+  toggleLikeToAnPost,
+  userPostFeed,
+  videoPost,
+} from "../controllers/post.controllers";
 
 const router = Router();
 
@@ -10,5 +17,6 @@ router.route("/text").post(auth, textPost);
 router.route("/image").post(auth, upload.single("image"), imagePost);
 router.route("/video").post(auth, upload.single("video"), videoPost);
 router.route("/:id").delete(auth, deletePost);
+router.route("/:id").put(auth, toggleLikeToAnPost);
 
 export default router;
