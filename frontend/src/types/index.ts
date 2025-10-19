@@ -33,7 +33,11 @@ export interface IPost {
   video?: string;
   image?: string;
   text: string;
-  createdBy: string;
+  createdBy: {
+    username: string;
+    profileImage?: string;
+    name: string;
+  };
   likes: string[];
   comments: [];
   tags: string[];

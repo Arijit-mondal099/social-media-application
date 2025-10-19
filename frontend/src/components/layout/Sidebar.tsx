@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onCreatePost }) => {
-  const { user } = useAppSelector(state => state.user);
+  const { user } = useAppSelector((state) => state.user);
   const location = useLocation();
 
   const navItems = [
@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCreatePost }) => {
 
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
-            className="w-full justify-start space-x-2 mb-4 font-bold"
+            className="flex gap-2 p-6 w-full mb-4"
             size="lg"
             onClick={onCreatePost}
           >
@@ -66,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCreatePost }) => {
                 className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors ${
                   isActive(item.path)
                     ? "bg-primary/10 text-primary border border-primary/20"
-                    : "text-white"
+                    : "text-black dark:text-white"
                 }`}
               >
                 <item.icon className="w-5 h-5" />

@@ -1,6 +1,6 @@
 import { IPost } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
-import { imagePost, textPost, videoPost } from "./postThunks";
+import { getUserFeed } from "./postThunks";
 
 interface IPostSlice {
   posts: IPost[];
@@ -20,45 +20,17 @@ const counterSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // text
-      .addCase(textPost.pending, (state) => {
+      // get user feed posts
+      .addCase(getUserFeed.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(textPost.fulfilled, (state, action) => {
+      .addCase(getUserFeed.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.posts.push(action.payload.post);
+        state.posts = action.payload.data.feed;
       })
-      .addCase(textPost.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // image
-      .addCase(imagePost.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(imagePost.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
-        state.posts.push(action.payload.post);
-      })
-      .addCase(imagePost.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // video
-      .addCase(videoPost.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(videoPost.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
-        state.posts.push(action.payload.post);
-      })
-      .addCase(videoPost.rejected, (state, action) => {
+      .addCase(getUserFeed.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

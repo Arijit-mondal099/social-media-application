@@ -22,6 +22,7 @@ import { ModeToggle } from "@/components/layout/mode-toggle";
 import { useTheme } from "next-themes";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "@/components/modals/ConfirmModal";
 
 export const SettingsPage: React.FC = () => {
   const { theme } = useTheme();
@@ -29,12 +30,9 @@ export const SettingsPage: React.FC = () => {
   const nvaigate = useNavigate();
 
   const handleLogout = useCallback(() => {
-    const isConfirm = window.confirm("Are you sure you want to sign out?");
-    if (isConfirm) {
-      dispatch(logout());
-      localStorage.removeItem("token");
-      nvaigate("/login");
-    }
+    dispatch(logout());
+    localStorage.removeItem("token");
+    nvaigate("/login");
   }, [dispatch, nvaigate]);
 
   const settingSections = [
@@ -167,14 +165,22 @@ export const SettingsPage: React.FC = () => {
                     Sign out of your account on this device
                   </p>
                 </div>
-                <Button
-                  variant="destructive"
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </Button>
+
+                <ConfirmModal
+                  title="Danger Zone!"
+                  description="Are you sure you want to sign out?, if yes then click on confirm button!"
+                  btnText="Confirm"
+                  onConfirm={handleLogout}
+                  trigger={
+                    <Button
+                      variant="destructive"
+                      className="flex items-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </Button>
+                  }
+                />
               </div>
             </CardContent>
           </Card>

@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
-import { login } from "@/features/user/userThunks";
+import { login, profile } from "@/features/user/userThunks";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -42,6 +42,7 @@ export const LoginPage = () => {
     const res = await dispatch(login({ email, password }));
 
     if (login.fulfilled.match(res)) {
+      await dispatch(profile());
       toast.success("Welcome back!");
       navigate("/feed");
     } else {

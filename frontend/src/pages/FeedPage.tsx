@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { PostCard } from "@/components/common/PostCard";
-import { IPost } from "@/types";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { getUserFeed } from "@/features/post/postThunks";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface IComment {
   _id: string;
@@ -11,63 +14,8 @@ export interface IComment {
 }
 
 export const FeedPage: React.FC = () => {
-  const posts: IPost[] = [
-    {
-      _id: "1",
-      postType: "text",
-      text: "Just finished reading an amazing book! Highly recommend it.",
-      createdBy: "user1",
-      likes: ["user2", "user3"],
-      comments: [],
-      tags: ["reading", "books", "recommendation"],
-      createdAt: new Date("2025-09-20T10:00:00"),
-    },
-    {
-      _id: "2",
-      postType: "image",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrTPjHOG0LBJKLlx35kYcK4hpx5xRdGNQ4tQ&s",
-      text: "Look at this beautiful sunset!",
-      createdBy: "user2",
-      likes: ["user1"],
-      comments: [],
-      tags: ["sunset", "photography", "nature"],
-      createdAt: new Date("2025-09-21T18:30:00"),
-    },
-    {
-      _id: "3",
-      postType: "video",
-      video: "https://www.w3schools.com/html/mov_bbb.mp4",
-      text: "Check out this cool video I made!",
-      createdBy: "user3",
-      likes: [],
-      comments: [],
-      tags: ["video", "fun", "editing"],
-      createdAt: new Date("2025-09-19T14:15:00"),
-    },
-    {
-      _id: "4",
-      postType: "text",
-      text: "Excited to start my new project at work today!",
-      createdBy: "user4",
-      likes: ["user1", "user3"],
-      comments: [],
-      tags: ["work", "project", "motivation"],
-      createdAt: new Date("2025-09-21T08:45:00"),
-    },
-    {
-      _id: "5",
-      postType: "image",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrTPjHOG0LBJKLlx35kYcK4hpx5xRdGNQ4tQ&s",
-      text: "My lunch today was amazing 🍝",
-      createdBy: "user5",
-      likes: ["user2"],
-      comments: [],
-      tags: ["food", "lunch", "yum"],
-      createdAt: new Date("2025-09-21T13:20:00"),
-    },
-  ];
+  const { posts, loading } = useAppSelector((state) => state.post);
+  const dispatch = useAppDispatch();
 
   const toggleLike = (postId: string) => {
     console.log("Liked post", postId);
@@ -76,6 +24,12 @@ export const FeedPage: React.FC = () => {
   const toggleBookmark = (postId: string) => {
     console.log("Bookmarked post", postId);
   };
+
+  useEffect(() => {
+    dispatch(getUserFeed());
+  }, [dispatch]);
+
+  console.log(posts);
 
   return (
     <motion.div
@@ -91,21 +45,34 @@ export const FeedPage: React.FC = () => {
         <h1 className="text-2xl font-bold mb-6">Your Feed</h1>
       </motion.div>
 
-      {posts.map((post, index) => (
-        <motion.div
-          key={post._id}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="w-full"
-        >
-          <PostCard
-            post={post}
-            onLike={toggleLike}
-            onBookmark={toggleBookmark}
-          />
-        </motion.div>
-      ))}
+      {loading
+        ? Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col space-y-3 border p-4 rounded-lg"
+            >
+              <Skeleton className="h-[350px] w-full rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[250px]" />
+                <Skeleton className="h-4 w-[200px]" />
+              </div>
+            </div>
+          ))
+        : posts.map((post, index) => (
+            <motion.div
+              key={post._id}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="w-full"
+            >
+              <PostCard
+                post={post}
+                onLike={toggleLike}
+                onBookmark={toggleBookmark}
+              />
+            </motion.div>
+          ))}
     </motion.div>
   );
 };

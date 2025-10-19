@@ -14,6 +14,15 @@ export const textPost = async (req: AuthRequest, res: Response) => {
     const { text, tags } = req.body;
     const userId = req.user?._id;
 
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: user not found!",
+      });
+    }
+
     if (!text?.trim()) {
       return res
         .status(400)
@@ -27,21 +36,21 @@ export const textPost = async (req: AuthRequest, res: Response) => {
       tags,
     });
 
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: user not found!",
-      });
-    }
-
     user.posts.push(post._id as mongoose.Types.ObjectId);
     await user.save();
 
-    return res
-      .status(201)
-      .json({ success: true, message: "Post created", post });
+    return res.status(201).json({
+      success: true,
+      message: "Post created successfully",
+      post: {
+        ...post.toObject(),
+        createdBy: {
+          name: user.name,
+          profileImage: user.profileImage,
+          username: user.username,
+        },
+      },
+    });
   } catch (error) {
     console.error("Text post error", error);
     return res
@@ -322,27 +331,30 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
         .json({ success: false, message: "User not found" });
     }
 
+    // Pagination parameters
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(10, parseInt(req.query.limit as string) || 10);
+    const skip = (page - 1) * limit;
+
     // --- Following feed ---
     const followingFeed = await Post.find({
       createdBy: { $in: [...user.following, user._id] },
     })
       .sort({ createdAt: -1 })
-      .limit(30)
-      .populate("createdBy", "username avatar")
+      .populate("createdBy", "username profileImage name")
       .lean();
 
     // --- Most liked posts ---
     const mostLikedPosts = await Post.aggregate([
       { $addFields: { likesCount: { $size: { $ifNull: ["$likes", []] } } } },
       { $sort: { likesCount: -1 } },
-      { $limit: 20 },
       {
         $lookup: {
           from: "users",
           localField: "createdBy",
           foreignField: "_id",
           as: "createdBy",
-          pipeline: [{ $project: { username: 1, avatar: 1 } }],
+          pipeline: [{ $project: { username: 1, profileImage: 1, name: 1 } }],
         },
       },
       { $unwind: "$createdBy" },
@@ -356,14 +368,13 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
         },
       },
       { $sort: { commentsCount: -1 } },
-      { $limit: 20 },
       {
         $lookup: {
           from: "users",
           localField: "createdBy",
           foreignField: "_id",
           as: "createdBy",
-          pipeline: [{ $project: { username: 1, avatar: 1 } }],
+          pipeline: [{ $project: { username: 1, profileImage: 1, name: 1 } }],
         },
       },
       { $unwind: "$createdBy" },
@@ -382,8 +393,7 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
     const trendingPosts = trendingTags.length
       ? await Post.find({ tags: { $in: trendingTags.map((t) => t._id) } })
           .sort({ createdAt: -1 })
-          .limit(20)
-          .populate("createdBy", "username avatar")
+          .populate("createdBy", "username profileImage name")
           .lean()
       : [];
 
@@ -409,16 +419,35 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
         seenPosts.set(postId, true);
         const { priority, ...cleanPost } = post;
         combinedFeed.push(cleanPost);
-        if (combinedFeed.length >= 50) break;
       }
+    }
+
+    // Calculate pagination
+    const totalPosts = combinedFeed.length;
+    const totalPages = Math.ceil(totalPosts / limit);
+    const paginatedFeed = combinedFeed.slice(skip, skip + limit);
+
+    // Validate page number
+    if (page > totalPages && totalPosts > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Page ${page} does not exist. Maximum page is ${totalPages}`,
+      });
     }
 
     return res.status(200).json({
       success: true,
       message: "User feed fetched successfully",
       data: {
-        feed: combinedFeed,
-        totalPosts: combinedFeed.length,
+        feed: paginatedFeed,
+        pagination: {
+          currentPage: page,
+          pageSize: limit,
+          totalPosts,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
         categories: {
           following: followingFeed.length,
           mostLiked: mostLikedPosts.length,

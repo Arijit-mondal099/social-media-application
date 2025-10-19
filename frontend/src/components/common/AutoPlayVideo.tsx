@@ -67,7 +67,7 @@ export const AutoPlayVideo: React.FC<AutoPlayVideoProps> = ({ src, text }) => {
         loop
         playsInline
         muted
-        className="w-full rounded-lg shadow-lg max-h-[80vh] object-cover"
+        className="w-full rounded-lg shadow-lg h-auto max-h-[80vh] object-cover"
       >
         <source src={src} type="video/mp4" />
       </video>
