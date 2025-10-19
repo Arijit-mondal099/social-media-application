@@ -1,7 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { IPost, IUser } from "@/types";
 import {
+  bookmarkPost,
   deletePost,
+  getBookmarkPosts,
   getUserPosts,
   imagePost,
   login,
@@ -19,6 +21,7 @@ export interface IUserState {
   user: IUser | null;
   token: string | null;
   posts: IPost[];
+  bookmarkedPosts: IPost[];
   error: string | null;
   authChecking: boolean;
   loading: boolean;
@@ -28,6 +31,7 @@ const initialState: IUserState = {
   user: JSON.parse(localStorage.getItem("user") || "null"),
   token: localStorage.getItem("token"),
   posts: [],
+  bookmarkedPosts: [],
   authChecking: false,
   loading: false,
   error: null,
@@ -209,6 +213,44 @@ const counterSlice = createSlice({
         state.error = null;
       })
       .addCase(updatePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // toggle bookmark post
+      .addCase(bookmarkPost.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(bookmarkPost.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        if (action.payload.flag) {
+          // added to bookmarks
+          state.bookmarkedPosts = [
+            action.payload.post!,
+            ...state.bookmarkedPosts,
+          ];
+        } else {
+          // removed from bookmarks
+          state.bookmarkedPosts = state.bookmarkedPosts.filter(
+            (post) => post._id !== action.payload.post!._id
+          );
+        }
+      })
+      .addCase(bookmarkPost.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // fetch bookmark posts
+      .addCase(getBookmarkPosts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getBookmarkPosts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.bookmarkedPosts = action.payload.posts!;
+      })
+      .addCase(getBookmarkPosts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

@@ -41,7 +41,7 @@ const counterSlice = createSlice({
       .addCase(likeToAnPost.fulfilled, (state, action) => {
         state.error = null;
         state.posts = state.posts.map((post) => {
-          if (post._id === action.meta.arg) {
+          if (post._id === action.payload.postId) {
             return {
               ...post,
               likes: action.payload.flag

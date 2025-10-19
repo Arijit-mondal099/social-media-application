@@ -283,3 +283,49 @@ export const updatePassword = createAsyncThunk<
     );
   }
 });
+
+export const bookmarkPost = createAsyncThunk<
+  { success: boolean; message: string; post: IPost; flag: boolean },
+  string,
+  { rejectValue: string }
+>("user/bookmarkPost", async (postId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(
+      `/posts/bookmark/${postId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to bookmark the post"
+    );
+  }
+});
+
+export const getBookmarkPosts = createAsyncThunk<
+  { success: boolean; message: string; posts: IPost[] },
+  void,
+  { rejectValue: string }
+>("user/getBookmarkPosts", async (_, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get("/posts/bookmarks", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch bookmarked posts"
+    );
+  }
+});

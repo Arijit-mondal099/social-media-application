@@ -225,28 +225,24 @@ export const toggleLikeToAnPost = async (req: AuthRequest, res: Response) => {
     if (isUserLikedPost) {
       // disliked
       await Post.updateOne({ _id: id }, { $pull: { likes: userId } });
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Post disliked",
-          postId: id,
-          userId,
-          flag: false,
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Post disliked",
+        postId: id,
+        userId,
+        flag: false,
+      });
     } else {
       // Like
       post.likes.push(new mongoose.Types.ObjectId(userId));
       await post.save();
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Post liked",
-          postId: id,
-          userId,
-          flag: true,
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Post liked",
+        postId: id,
+        userId,
+        flag: true,
+      });
     }
   } catch (error) {
     console.error("Like post error", error);
@@ -293,6 +289,100 @@ export const commentOnPost = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Comment post error", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error", error });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/posts/bookmark/:id
+ * METHOD: PUT
+ */
+export const bookmarkPost = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?._id;
+    const postId = req.params.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Unauthorized: User not found!" });
+    }
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found!" });
+    }
+
+    const isAlreadyBookmarked = user.savedPosts.includes(
+      post._id as mongoose.Types.ObjectId
+    );
+
+    if (isAlreadyBookmarked) {
+      // Remove bookmark
+      user.savedPosts = user.savedPosts.filter(
+        (savedPostId) => String(savedPostId) !== String(post._id)
+      );
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Post removed from bookmarks",
+        post,
+        flag: false,
+      });
+    } else {
+      // Add bookmark
+      user.savedPosts.push(post._id as mongoose.Types.ObjectId);
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Post bookmarked successfully",
+        post,
+        flag: true,
+      });
+    }
+  } catch (error) {
+    console.error("Bookmarked post error", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error", error });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/posts/bookmarks
+ * METHOD: GET
+ */
+export const getBookmarkedPosts = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?._id;
+
+    const user = await User.findById(userId)
+      .select("savedPosts")
+      .populate({
+        path: "savedPosts",
+        select: "postType video image text createdBy likes comments tags createdAt",
+        populate: {
+          path: "createdBy",
+          select: "name username profileImage",
+        },
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Bookmarked posts fetched successfully",
+      posts: user?.savedPosts.reverse() || [],
+    });
+  } catch (error) {
+    console.error("Delete post error", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal server error", error });

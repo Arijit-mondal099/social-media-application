@@ -4,16 +4,20 @@ import { Calendar, Link as LinkIcon, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-// import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { deletePost, getUserPosts } from "@/features/user/userThunks";
+import {
+  deletePost,
+  getBookmarkPosts,
+  getUserPosts,
+} from "@/features/user/userThunks";
 import { toast } from "sonner";
 import { PostCard } from "@/components/common/PostCard";
 
 export const ProfilePage: React.FC = () => {
-  const { user, posts } = useAppSelector((state) => state.user);
-  // const navigate = useNavigate();
+  const { user, posts, bookmarkedPosts } = useAppSelector(
+    (state) => state.user
+  );
   const dispatch = useAppDispatch();
 
   const handleDeletePost = async (id: string) => {
@@ -27,6 +31,7 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     dispatch(getUserPosts());
+    dispatch(getBookmarkPosts());
   }, [dispatch]);
 
   return (
@@ -127,8 +132,8 @@ export const ProfilePage: React.FC = () => {
           {/* Saved Posts */}
           <TabsContent value="saved" className="mt-6">
             <div className="grid gap-4">
-              {user?.savedPosts.length ? (
-                user.posts.map((p) => <PostCard key={p._id} post={p} />)
+              {bookmarkedPosts.length ? (
+                bookmarkedPosts.map((p) => <PostCard key={p._id} post={p} />)
               ) : (
                 <p>No posts to display!</p>
               )}

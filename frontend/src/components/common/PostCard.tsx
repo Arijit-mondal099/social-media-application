@@ -18,6 +18,7 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { likeToAnPost } from "@/features/post/postThunks";
 import { toast } from "sonner";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { bookmarkPost } from "@/features/user/userThunks";
 
 interface PostCardProps {
   post: IPost;
@@ -27,16 +28,27 @@ interface PostCardProps {
 }
 
 export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
-  const { user } = useAppSelector((state) => state.user);
+  const { user, bookmarkedPosts } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
 
   const isUserLikedPost = post.likes.includes(user?._id || "");
+  const isPostBookmarked = bookmarkedPosts.some((p) => p._id === post._id);
 
   const handleLikeToggleToPost = async (postId: string) => {
     const res = await dispatch(likeToAnPost(postId));
 
     if (!likeToAnPost.fulfilled.match(res)) {
       toast.success(res.payload || "Unable to like the post");
+    }
+  };
+
+  const handleBookmarkToggleToPost = async (postId: string) => {
+    const res = await dispatch(bookmarkPost(postId));
+
+    if (bookmarkPost.fulfilled.match(res)) {
+      toast.success(res.payload.message || "Post bookmark toggled");
+    } else {
+      toast.success(res.payload || "Unable to bookmark the post");
     }
   };
 
@@ -129,20 +141,18 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className={`flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted 
-               hover:text-red-500 transition-colors duration-300 ${
-                 isUserLikedPost ? "text-red-500" : ""
-               }`}
+                className={`flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-red-500 transition-colors duration-300 ${
+                  isUserLikedPost ? "text-red-500" : ""
+                }`}
                 onClick={() => handleLikeToggleToPost(post._id)}
               >
-                <Heart className="w-4 h-4" />
+                <Heart className={`w-4 h-4 ${isUserLikedPost && "fill-red-500"}`} />
                 <span>{post.likes.length ? post.likes.length : "Like"}</span>
               </Button>
 
               <Button
                 variant="outline"
-                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted 
-               hover:text-blue-500 transition-colors duration-300"
+                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-blue-500 transition-colors duration-300"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>0</span>
@@ -150,8 +160,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
               <Button
                 variant="outline"
-                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted 
-               hover:text-blue-500 transition-colors duration-300"
+                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-blue-500 transition-colors duration-300"
               >
                 <Share className="w-4 h-4" />
               </Button>
@@ -159,11 +168,14 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
             <Button
               variant="outline"
-              className="flex items-center gap-2 bg-white dark:bg-black 
-               border-muted hover:border-muted 
-               hover:text-blue-500 transition-colors duration-300"
+              className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-blue-500 transition-colors duration-300"
+              onClick={() => handleBookmarkToggleToPost(post._id)}
             >
-              <Bookmark className="w-4 h-4" />
+              <Bookmark
+                className={`w-4 h-4 ${
+                  isPostBookmarked && "fill-black dark:fill-white"
+                }`}
+              />
             </Button>
           </div>
         </CardFooter>
