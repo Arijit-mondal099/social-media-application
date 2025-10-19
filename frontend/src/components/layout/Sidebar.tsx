@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Compass, User, Settings, Plus, Bookmark } from "lucide-react";
+import { Home, Compass, User, Settings, Plus, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAppSelector } from "@/hooks/useAppSelector";
@@ -17,7 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCreatePost }) => {
   const navItems = [
     { icon: Home, label: "Home", path: "/feed" },
     { icon: Compass, label: "Explore", path: "/explore" },
-    { icon: Bookmark, label: "Bookmarks", path: "/bookmarks" },
+    { icon: Video, label: "Reels", path: "/reels" },
     { icon: User, label: "Profile", path: "/profile" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];

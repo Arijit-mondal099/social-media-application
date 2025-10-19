@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Plus, Heart, User } from "lucide-react";
+import { Home, Plus, User, Video, Compass } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAppSelector } from "@/hooks/useAppSelector";
 
@@ -17,9 +17,9 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
 
   const navItems = [
     { icon: Home, label: "Home", path: "/feed" },
-    { icon: Search, label: "Search", path: "/explore" },
+    { icon: Compass, label: "Explore", path: "/explore" },
     { icon: Plus, label: "Create", path: "#", action: onCreatePost },
-    { icon: Heart, label: "Activity", path: "/messages" },
+    { icon: Video, label: "Reels", path: "/reels" },
     { icon: User, label: "Profile", path: "/profile", isProfile: true },
   ];
 
@@ -29,7 +29,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
     <motion.nav
       initial={{ y: 100 }}
       animate={{ y: 0 }}
-      className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 md:hidden"
+      className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 lg:hidden"
     >
       <div className="flex items-center justify-around py-2 px-4">
         {navItems.map((item) => (
