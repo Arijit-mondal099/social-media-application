@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { toast } from "sonner";
 
 interface ConfirmModalProps {
   title: string;
@@ -26,10 +29,18 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   trigger,
 }) => {
-  const [open, setOpen] = React.useState(false);
+  const [isConfirm, setIsConfirm] = useState<string>("");
+  const [open, setOpen] = useState<boolean>(false);
 
   const handleConfirm = () => {
+    if (isConfirm.toLowerCase() !== "confirm") {
+      toast.error('Please type "confirm" to proceed');
+      return;
+    }
+
     if (onConfirm) onConfirm();
+
+    setIsConfirm("");
     setOpen(false);
   };
 
@@ -45,11 +56,28 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
+        <div>
+          <Label className="block mb-2 mt-4 font-medium text-sm">
+            Type "confirm" to proceed
+          </Label>
+          <Input
+            type="text"
+            placeholder="Type confirm here"
+            className="w-full border rounded-md p-2 bg-background text-foreground"
+            value={isConfirm}
+            onChange={(e) => setIsConfirm(e.target.value)}
+          />
+        </div>
+
         <div className="flex justify-end gap-2 mt-4">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleConfirm}>
+          <Button
+            variant="destructive"
+            onClick={handleConfirm}
+            disabled={isConfirm.toLowerCase() !== "confirm"}
+          >
             {btnText}
           </Button>
         </div>

@@ -22,8 +22,8 @@ import { useAppSelector } from "@/hooks/useAppSelector";
 import { ThemeProvider } from "./components/layout/theme-provider";
 import { profile } from "@/features/user/userThunks";
 import { EditProfile } from "@/components/common/EditProfile";
-import { EditEmail } from "@/components/common/EditEmail";
-import { EditPassword } from "@/components/common/EditPassword";
+import { Privacy } from "@/components/common/Privacy";
+import { Security } from "@/components/common/Security";
 
 const AppRoutes: React.FC = () => {
   const { token, authChecking } = useAppSelector((state) => state.user);
@@ -57,6 +57,36 @@ const AppRoutes: React.FC = () => {
               <Route path="/" element={<Navigate to="/feed" replace />} />
               <Route
                 path="/feed"
+                element={
+                  <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <FeedPage />
+                    </motion.div>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/reels"
+                element={
+                  <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <FeedPage />
+                    </motion.div>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/post/:postId"
                 element={
                   <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
                     <motion.div
@@ -155,7 +185,7 @@ const AppRoutes: React.FC = () => {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <EditPassword />
+                      <Security />
                     </motion.div>
                   </Layout>
                 }
@@ -170,7 +200,7 @@ const AppRoutes: React.FC = () => {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <EditEmail />
+                      <Privacy />
                     </motion.div>
                   </Layout>
                 }

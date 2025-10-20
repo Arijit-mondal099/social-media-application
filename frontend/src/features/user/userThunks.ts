@@ -329,3 +329,24 @@ export const getBookmarkPosts = createAsyncThunk<
     );
   }
 });
+
+export const deleteUserAccount = createAsyncThunk<
+  { success: boolean; message: string },
+  void,
+  { rejectValue: string }
+>("user/deleteUserAccount", async (_, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.delete("/users/delete-account", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch bookmarked posts"
+    );
+  }
+});

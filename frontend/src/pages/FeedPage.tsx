@@ -40,7 +40,7 @@ export const FeedPage: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <h1 className="text-2xl font-bold mb-6">Your Feed</h1>
+        <h1 className="text-2xl font-bold mb-6 italic">Your Feed</h1>
       </motion.div>
 
       {loading

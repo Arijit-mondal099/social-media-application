@@ -433,3 +433,35 @@ export const getUserPosts = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+/**
+ * ROUTE: /api/v1/users/delete-account
+ * METHOD: DELETE
+ */
+export const deleteUserAccount = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found unauthorized request!",
+      });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "User account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Errer from delete user", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      error: error,
+    });
+  }
+};

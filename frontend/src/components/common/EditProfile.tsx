@@ -11,6 +11,8 @@ import { defaultProfileImage } from "@/assets";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { updateProfile, updateProfileImage } from "@/features/user/userThunks";
 import { toast } from "sonner";
+import ConfirmModal from "../modals/ConfirmModal";
+import { set } from "date-fns";
 
 export interface FormState {
   name: string;
@@ -50,9 +52,7 @@ export const EditProfile: React.FC = () => {
     setImageFile(file);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     try {
       if (imageFile) {
         const formData = new FormData();
@@ -61,9 +61,9 @@ export const EditProfile: React.FC = () => {
         const res = await dispatch(updateProfileImage(formData));
 
         if (updateProfileImage.fulfilled.match(res)) {
-          toast.success("Profile updated successfully");
+          toast.success(res.payload.message);
         } else {
-          toast.error("Something went wrong!");
+          toast.error(res.payload);
         }
       }
 
@@ -76,11 +76,14 @@ export const EditProfile: React.FC = () => {
         const res = await dispatch(updateProfile(formState));
 
         if (updateProfile.fulfilled.match(res)) {
-          toast.success("Profile updated successfully");
+          toast.success(res.payload.message);
         } else {
           toast.error(res.payload);
         }
       }
+
+      setIsInputChanged(true);
+      setImageFile(null);
     } catch (error: unknown) {
       console.error("Error updating profile:", error);
       toast.error("Something went wrong!");
@@ -117,7 +120,7 @@ export const EditProfile: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8 text-left">
+          <form className="space-y-8 text-left">
             <div className="space-y-4">
               {/* profile image */}
               <div className="relative w-32 md:w-44 h-32 md:h-44 mx-auto overflow-hidden rounded-full border-4 border-gray-400">
@@ -196,21 +199,29 @@ export const EditProfile: React.FC = () => {
               </div>
             </div>
 
-            <Button
-              className="w-full disabled:opacity-40 disabled:cursor-pointer"
-              type="submit"
-              disabled={loading || isInputChanged}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="animate-spin w-4 h-4" /> Updating...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Save className="w-4 h-4" /> Save
-                </span>
-              )}
-            </Button>
+            <ConfirmModal
+              title="Confirm Profile Update"
+              description="Are you sure you want to update your profile? Make sure all the information is correct."
+              btnText="Update Profile"
+              onConfirm={handleSubmit}
+              trigger={
+                <Button
+                  className="w-full disabled:opacity-40 disabled:cursor-pointer"
+                  type="button"
+                  disabled={loading || isInputChanged}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="animate-spin w-4 h-4" /> Updating...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Save className="w-4 h-4" /> Save
+                    </span>
+                  )}
+                </Button>
+              }
+            />
           </form>
         </CardContent>
       </Card>

@@ -3,6 +3,7 @@ import { IPost, IUser } from "@/types";
 import {
   bookmarkPost,
   deletePost,
+  deleteUserAccount,
   getBookmarkPosts,
   getUserPosts,
   imagePost,
@@ -44,6 +45,8 @@ const counterSlice = createSlice({
     logout: (state) => {
       state.token = null;
       state.user = null;
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
     },
   },
   extraReducers: (builder) => {
@@ -251,6 +254,23 @@ const counterSlice = createSlice({
         state.bookmarkedPosts = action.payload.posts!;
       })
       .addCase(getBookmarkPosts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // delete usee account
+      .addCase(deleteUserAccount.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteUserAccount.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+        state.user = null;
+        state.token = null;
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      })
+      .addCase(deleteUserAccount.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

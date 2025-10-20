@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Loader2, Lock, Save, Shield } from "lucide-react";
+import {
+  ChevronLeft,
+  Loader2,
+  Lock,
+  Save,
+  Shield,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -15,19 +23,18 @@ import { Button } from "../ui/button";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { toast } from "sonner";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { updatePassword } from "@/features/user/userThunks";
+import { deleteUserAccount, updatePassword } from "@/features/user/userThunks";
+import ConfirmModal from "../modals/ConfirmModal";
 
-export const EditPassword: React.FC = () => {
+export const Security: React.FC = () => {
   const [oldPassword, setOldPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const { loading } = useAppSelector((state) => state.user);
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (newPassword.length < 6) {
       toast.error("Password length should be getterthan 6!");
       return;
@@ -51,6 +58,23 @@ export const EditPassword: React.FC = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: unknown) {
+      console.log(error);
+      if (error instanceof Error) toast.error(error.message);
+      else toast.error("Something went wrong...");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const res = await dispatch(deleteUserAccount());
+
+      if (deleteUserAccount.fulfilled.match(res)) {
+        toast.success("Account deleted successfully");
+        navigate("/login");
+      } else {
+        toast.error(res.payload);
+      }
+    } catch (error) {
       console.log(error);
       if (error instanceof Error) toast.error(error.message);
       else toast.error("Something went wrong...");
@@ -86,7 +110,7 @@ export const EditPassword: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5 text-left">
+          <form onSubmit={handleSubmit} className="space-y-8 text-left">
             {/* Password */}
             <div className="flex flex-col space-y-6 border p-4 rounded-md">
               <div className="flex items-center gap-2">
@@ -135,17 +159,61 @@ export const EditPassword: React.FC = () => {
                 </div>
               </div>
 
-              <Button type="submit">
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="animate-spin w-4 h-4" /> Updating...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Save className="w-4 h-4" /> Save
-                  </span>
-                )}
-              </Button>
+              <ConfirmModal
+                title="Confirm Password Change"
+                description="Are you sure you want to change your password? Make sure you remember your new password."
+                btnText="Change Password"
+                onConfirm={handleSubmit}
+                trigger={
+                  <Button
+                    type="button"
+                    disabled={
+                      loading ||
+                      !oldPassword ||
+                      !newPassword ||
+                      !confirmPassword
+                    }
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="animate-spin w-4 h-4" /> Updating...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Save className="w-4 h-4" /> Save
+                      </span>
+                    )}
+                  </Button>
+                }
+              />
+            </div>
+
+            {/* Delete account */}
+            <div className="flex flex-col space-y-6 border p-4 rounded-md">
+              <div className="flex items-center gap-2 text-destructive">
+                <TriangleAlert className="w-6 h-6" />
+                <span className="text-xl font-semibold">Delete Account!</span>
+              </div>
+
+              <ConfirmModal
+                title="Delete Account"
+                description="Deleting your account is permanent and will remove all your data. This action cannot be undone — please export any important information before proceeding."
+                btnText="Delete"
+                onConfirm={handleDeleteAccount}
+                trigger={
+                  <Button type="button" variant="destructive">
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="animate-spin w-4 h-4" /> Updating...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Trash2 className="w-4 h-4" /> Delete Account
+                      </span>
+                    )}
+                  </Button>
+                }
+              />
             </div>
           </form>
         </CardContent>

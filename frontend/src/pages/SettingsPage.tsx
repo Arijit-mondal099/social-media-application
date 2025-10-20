@@ -31,7 +31,6 @@ export const SettingsPage: React.FC = () => {
 
   const handleLogout = useCallback(() => {
     dispatch(logout());
-    localStorage.removeItem("token");
     nvaigate("/login");
   }, [dispatch, nvaigate]);
 
@@ -42,17 +41,18 @@ export const SettingsPage: React.FC = () => {
       items: [
         {
           label: "Edit Profile",
-          description: "Update your profile information",
+          description:
+            "Update your name, username, bio, and other profile details.",
           redirect: "/edit-profile",
         },
         {
           label: "Privacy",
-          description: "Control your privacy settings & Email",
+          description: "Manage who can see your activity, posts, and email.",
           redirect: "/privacy",
         },
         {
           label: "Security",
-          description: "Password and security options",
+          description: "Change your password, delete your account.",
           redirect: "/security",
         },
       ],
@@ -123,11 +123,12 @@ export const SettingsPage: React.FC = () => {
                         {section.title === "Appearance" ? (
                           <ModeToggle />
                         ) : (
-                          <Button variant="ghost" size="sm">
-                            <ChevronRight
-                              className="w-4 h-4"
-                              onClick={() => nvaigate(item.redirect)}
-                            />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => nvaigate(item.redirect)}
+                          >
+                            <ChevronRight className="w-4 h-4" />
                           </Button>
                         )}
                       </div>
@@ -167,9 +168,9 @@ export const SettingsPage: React.FC = () => {
                 </div>
 
                 <ConfirmModal
-                  title="Danger Zone!"
-                  description="Are you sure you want to sign out?, if yes then click on confirm button!"
-                  btnText="Confirm"
+                  title="Confirm Sign Out"
+                  description="Are you sure you want to sign out? You will be returned to the login screen and need to sign in again to access your account."
+                  btnText="Sign Out"
                   onConfirm={handleLogout}
                   trigger={
                     <Button
