@@ -12,7 +12,6 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { updateProfile, updateProfileImage } from "@/features/user/userThunks";
 import { toast } from "sonner";
 import ConfirmModal from "../modals/ConfirmModal";
-import { set } from "date-fns";
 
 export interface FormState {
   name: string;
