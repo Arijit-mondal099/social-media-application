@@ -3,6 +3,7 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 export interface IComment {
   comUserId: Types.ObjectId;
   comment: string;
+  createdAt: Date;
 }
 
 export interface IPost extends Document {

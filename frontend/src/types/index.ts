@@ -27,6 +27,17 @@ export interface IUser {
   createdAt: Date;
 }
 
+export interface IComment {
+  comUserId: {
+    _id: string;
+    name: string;
+    username: string;
+    profileImage?: string;
+  };
+  comment: string;
+  createdAt: Date;
+}
+
 export interface IPost {
   _id: string;
   postType: "text" | "image" | "video";
@@ -39,18 +50,9 @@ export interface IPost {
     name: string;
   };
   likes: string[];
-  comments: [];
+  comments: IComment[];
   tags: string[];
   createdAt: Date;
-}
-
-export interface Comment {
-  id: string;
-  author: IUser;
-  content: string;
-  createdAt: Date;
-  likes: number;
-  isLiked: boolean;
 }
 
 export interface Message {

@@ -254,7 +254,7 @@ export const toggleLikeToAnPost = async (req: AuthRequest, res: Response) => {
 
 /**
  * ROUTE: /api/v1/posts/comment/:id
- * METHOD: PUT
+ * METHOD: POST
  */
 export const commentOnPost = async (req: AuthRequest, res: Response) => {
   try {
@@ -270,7 +270,9 @@ export const commentOnPost = async (req: AuthRequest, res: Response) => {
         .json({ success: false, message: "Post not found!" });
     }
 
-    if (!userId) {
+    const user = await User.findById(userId);
+
+    if (!user) {
       return res
         .status(401)
         .json({ success: false, message: "Unauthorized request!" });
@@ -279,13 +281,23 @@ export const commentOnPost = async (req: AuthRequest, res: Response) => {
     post.comments.push({
       comUserId: new mongoose.Types.ObjectId(userId),
       comment,
+      createdAt: new Date(),
     });
     await post.save();
 
     return res.status(201).json({
       success: true,
       message: "Comment added successfully",
-      post,
+      comment: {
+        comUserId: {
+          _id: user._id,
+          name: user.name,
+          username: user.username,
+          profileImage: user.profileImage,
+        },
+        comment,
+        createdAt: post.comments[post.comments.length - 1].createdAt,
+      },
     });
   } catch (error) {
     console.error("Comment post error", error);
@@ -369,7 +381,8 @@ export const getBookmarkedPosts = async (req: AuthRequest, res: Response) => {
       .select("savedPosts")
       .populate({
         path: "savedPosts",
-        select: "postType video image text createdBy likes comments tags createdAt",
+        select:
+          "postType video image text createdBy likes comments tags createdAt",
         populate: {
           path: "createdBy",
           select: "name username profileImage",
@@ -382,7 +395,7 @@ export const getBookmarkedPosts = async (req: AuthRequest, res: Response) => {
       posts: user?.savedPosts.reverse() || [],
     });
   } catch (error) {
-    console.error("Delete post error", error);
+    console.error("Getting bookmarked posts:", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal server error", error });
@@ -582,6 +595,46 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Feed fetching error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while fetching feed",
+    });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/posts/:id
+ * METHOD: GET
+ */
+export const getPostById = async (req: AuthRequest, res: Response) => {
+  try {
+    const postId = req.params.id;
+
+    const post = await Post.findById(postId)
+      .populate("createdBy", "username profileImage name")
+      .populate({
+        path: "comments.comUserId",
+        select: "name profileImage username",
+      })
+      .lean();
+
+    if (post?.comments) {
+      post.comments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found!" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Post fetched successfully",
+      post,
+    });
+  } catch (error) {
+    console.error("Post by id fetching error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error while fetching feed",

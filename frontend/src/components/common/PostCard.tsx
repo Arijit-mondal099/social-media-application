@@ -1,6 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share, Bookmark, Trash2 } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Share,
+  Bookmark,
+  Trash2,
+  Star,
+} from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -19,6 +26,7 @@ import { likeToAnPost } from "@/features/post/postThunks";
 import { toast } from "sonner";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { bookmarkPost } from "@/features/user/userThunks";
+import { useNavigate } from "react-router-dom";
 
 interface PostCardProps {
   post: IPost;
@@ -28,11 +36,12 @@ interface PostCardProps {
 }
 
 export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
-  const { user, bookmarkedPosts } = useAppSelector((state) => state.user);
+  const { user } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const isUserLikedPost = post.likes.includes(user?._id || "");
-  const isPostBookmarked = bookmarkedPosts.some((p) => p._id === post._id);
+  const isPostBookmarked = user?.savedPosts.some((p) => p._id === post._id);
 
   const handleLikeToggleToPost = async (postId: string) => {
     const res = await dispatch(likeToAnPost(postId));
@@ -85,6 +94,12 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
               </div>
             </div>
 
+            {!onDelete && (
+              <Button variant={"ghost"} title="Ask AI about this post">
+                <Star className="fill-blue-300 text-blue-300 h-5 w-5 hover:fill-blue-500 hover:text-blue-500 transition-all duration-200" />
+              </Button>
+            )}
+
             {onDelete && (
               <ConfirmModal
                 title="Delete Post"
@@ -104,7 +119,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
             )}
           </div>
 
-          <div className="text-left mb-3 flex items-center gap-1.5 flex-wrap text-xs">
+          <div className="text-left text-blue-500 mb-3 flex items-center gap-1.5 flex-wrap text-xs">
             {post.tags.map((t) => (
               <span key={t}>#{t}</span>
             ))}
@@ -138,43 +153,52 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
         <CardFooter>
           <div className="w-full flex items-center justify-between gap-2">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className={`flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-red-500 transition-colors duration-300 ${
-                  isUserLikedPost ? "text-red-500" : ""
-                }`}
-                onClick={() => handleLikeToggleToPost(post._id)}
-              >
-                <Heart className={`w-4 h-4 ${isUserLikedPost && "fill-red-500"}`} />
-                <span>{post.likes.length ? post.likes.length : "Like"}</span>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-blue-500 transition-colors duration-300"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>0</span>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-blue-500 transition-colors duration-300"
-              >
-                <Share className="w-4 h-4" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex items-center gap-2 ${
+                isUserLikedPost
+                  ? "text-red-500"
+                  : "text-muted-foreground hover:text-red-500"
+              }`}
+              onClick={() => handleLikeToggleToPost(post._id)}
+            >
+              <Heart
+                className={`w-4 h-4 ${isUserLikedPost && "fill-red-500"}`}
+              />
+              {post.likes.length}
+            </Button>
 
             <Button
-              variant="outline"
-              className="flex items-center gap-2 bg-white dark:bg-black border-muted hover:border-muted hover:text-blue-500 transition-colors duration-300"
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-muted-foreground hover:text-blue-500"
+              onClick={() => navigate(`/post/${post._id}`)}
+            >
+              <MessageCircle className="w-4 h-4" />
+              {post.comments.length}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-muted-foreground hover:text-green-500"
+            >
+              <Share className="w-4 h-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex items-center gap-2 ${
+                isPostBookmarked
+                  ? "text-yellow-500"
+                  : "text-muted-foreground hover:text-yellow-500"
+              }`}
               onClick={() => handleBookmarkToggleToPost(post._id)}
             >
               <Bookmark
-                className={`w-4 h-4 ${
-                  isPostBookmarked && "fill-black dark:fill-white"
-                }`}
+                className={`w-4 h-4 ${isPostBookmarked && "fill-yellow-500"}`}
               />
             </Button>
           </div>

@@ -1,15 +1,22 @@
 import { IPost } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
-import { getUserFeed, likeToAnPost } from "./postThunks";
+import {
+  addCommentOnPost,
+  getPostById,
+  getUserFeed,
+  likeToAnPost,
+} from "./postThunks";
 
 interface IPostSlice {
   posts: IPost[];
+  post: IPost | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: IPostSlice = {
   posts: [],
+  post: null,
   loading: false,
   error: null,
 };
@@ -45,7 +52,7 @@ const counterSlice = createSlice({
             return {
               ...post,
               likes: action.payload.flag
-                ? [...post.likes, action.payload.userId] 
+                ? [...post.likes, action.payload.userId]
                 : post.likes.filter((id) => id !== action.payload.userId),
             };
           }
@@ -54,6 +61,31 @@ const counterSlice = createSlice({
       })
       .addCase(likeToAnPost.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+      // get post by id
+      .addCase(getPostById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPostById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.post = action.payload.post;
+      })
+      .addCase(getPostById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // add comment to a post
+      .addCase(addCommentOnPost.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(addCommentOnPost.fulfilled, (state, action) => {
+        state.error = null;
+        state.post?.comments.unshift(action.payload.comment);
+      })
+      .addCase(addCommentOnPost.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

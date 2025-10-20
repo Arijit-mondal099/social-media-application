@@ -232,9 +232,13 @@ const counterSlice = createSlice({
             action.payload.post!,
             ...state.bookmarkedPosts,
           ];
+          state.user?.savedPosts.push(action.payload.post!);
         } else {
           // removed from bookmarks
           state.bookmarkedPosts = state.bookmarkedPosts.filter(
+            (post) => post._id !== action.payload.post!._id
+          );
+          state.user!.savedPosts = state.user!.savedPosts.filter(
             (post) => post._id !== action.payload.post!._id
           );
         }
