@@ -46,7 +46,7 @@ export const FeedPage: React.FC = () => {
 
       {loading
         ? Array.from({ length: 5 }).map((_, i) => (
-            <Card className="bg-card rounded-lg p-4 space-y-4">
+            <Card className="bg-card rounded-lg p-4 space-y-4" key={i}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-10 h-10 rounded-full" />

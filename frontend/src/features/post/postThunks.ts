@@ -136,3 +136,19 @@ export const addCommentOnPost = createAsyncThunk<
     );
   }
 });
+
+export const getReels = createAsyncThunk(
+  "post/getReels",
+  async (page: number = 1, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/posts/reels?page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);

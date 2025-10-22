@@ -25,6 +25,7 @@ import { EditProfile } from "@/components/common/EditProfile";
 import { Privacy } from "@/components/common/Privacy";
 import { Security } from "@/components/common/Security";
 import PostComment from "@/components/common/PostComment";
+import { ReelsPage } from "./pages/ReelsPage";
 
 const AppRoutes: React.FC = () => {
   const { token, authChecking } = useAppSelector((state) => state.user);
@@ -81,7 +82,7 @@ const AppRoutes: React.FC = () => {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <FeedPage />
+                      <ReelsPage />
                     </motion.div>
                   </Layout>
                 }

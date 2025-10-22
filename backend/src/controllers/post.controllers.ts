@@ -619,7 +619,10 @@ export const getPostById = async (req: AuthRequest, res: Response) => {
       .lean();
 
     if (post?.comments) {
-      post.comments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      post.comments.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     }
 
     if (!post) {
@@ -638,6 +641,178 @@ export const getPostById = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error while fetching feed",
+    });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/posts/reels
+ * METHOD: GET
+ */
+export const getReels = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User not authenticated",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Pagination parameters - 1 reel at a time
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = 1;
+    const skip = (page - 1) * limit;
+
+    // --- Following reels ---
+    const followingReels = await Post.find({
+      createdBy: { $in: [...user.following, user._id] },
+      postType: "video",
+    })
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "username profileImage name")
+      .lean();
+
+    // --- Most liked reels ---
+    const mostLikedReels = await Post.aggregate([
+      { $match: { postType: "video" } },
+      { $addFields: { likesCount: { $size: { $ifNull: ["$likes", []] } } } },
+      { $sort: { likesCount: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+          pipeline: [{ $project: { username: 1, profileImage: 1, name: 1 } }],
+        },
+      },
+      { $unwind: "$createdBy" },
+    ]);
+
+    // --- Most commented reels ---
+    const mostCommentedReels = await Post.aggregate([
+      { $match: { postType: "video" } },
+      {
+        $addFields: {
+          commentsCount: { $size: { $ifNull: ["$comments", []] } },
+        },
+      },
+      { $sort: { commentsCount: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+          pipeline: [{ $project: { username: 1, profileImage: 1, name: 1 } }],
+        },
+      },
+      { $unwind: "$createdBy" },
+    ]);
+
+    // --- Trending tags for reels ---
+    const trendingReelTags = await Post.aggregate([
+      { $match: { postType: "video" } },
+      { $unwind: "$tags" },
+      { $group: { _id: "$tags", count: { $sum: 1 } } },
+      { $match: { count: { $gte: 3 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]);
+
+    // --- Trending reels ---
+    const trendingReels = trendingReelTags.length
+      ? await Post.find({
+          postType: "video",
+          tags: { $in: trendingReelTags.map((t) => t._id) },
+        })
+          .sort({ createdAt: -1 })
+          .populate("createdBy", "username profileImage name")
+          .lean()
+      : [];
+
+    // --- Merge & remove duplicates ---
+    const seenReels = new Map();
+    const combinedReels: any[] = [];
+
+    const allReels = [
+      ...followingReels.map((r) => ({ ...r, priority: 1 })),
+      ...mostLikedReels.map((r) => ({ ...r, priority: 2 })),
+      ...mostCommentedReels.map((r) => ({ ...r, priority: 3 })),
+      ...trendingReels.map((r) => ({ ...r, priority: 4 })),
+    ];
+
+    // If no categorized reels exist, fall back to all reels
+    if (allReels.length === 0) {
+      const fallbackReels = await Post.find({ postType: "video" })
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "username profileImage name")
+        .lean();
+
+      allReels.push(...fallbackReels.map((r) => ({ ...r, priority: 5 })));
+    }
+
+    allReels.sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    for (const reel of allReels) {
+      const reelId = reel._id.toString();
+      if (!seenReels.has(reelId)) {
+        seenReels.set(reelId, true);
+        const { priority, ...cleanReel } = reel;
+        combinedReels.push(cleanReel);
+      }
+    }
+
+    // Calculate pagination
+    const totalReels = combinedReels.length;
+    const totalPages = Math.ceil(totalReels / limit) || 1;
+    const paginatedReels = combinedReels.slice(skip, skip + limit);
+
+    // Validate page number
+    if (page > totalPages && totalReels > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Page ${page} does not exist. Maximum page is ${totalPages}`,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Reels fetched successfully",
+      data: {
+        reel: paginatedReels[0] || null,
+        pagination: {
+          currentPage: page,
+          totalReels,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+        categories: {
+          following: followingReels.length,
+          mostLiked: mostLikedReels.length,
+          mostCommented: mostCommentedReels.length,
+          trending: trendingReels.length,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Fetching reels error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while fetching reels",
     });
   }
 };

@@ -1,13 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import {
-  Heart,
-  MessageCircle,
-  Share,
-  Bookmark,
-  Trash2,
-  Star,
-} from "lucide-react";
+import { Heart, MessageCircle, Share, Bookmark, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -20,7 +13,7 @@ import { formatDistanceStrict } from "date-fns";
 import { Button } from "../ui/button";
 import { AutoPlayVideo } from "./AutoPlayVideo";
 import ConfirmModal from "../modals/ConfirmModal";
-import { defaultProfileImage } from "@/assets";
+import { AI_ICON, defaultProfileImage } from "@/assets";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { likeToAnPost } from "@/features/post/postThunks";
 import { toast } from "sonner";
@@ -95,8 +88,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
             </div>
 
             {!onDelete && (
-              <Button variant={"ghost"} title="Ask AI about this post">
-                <Star className="fill-blue-300 text-blue-300 h-5 w-5 hover:fill-blue-500 hover:text-blue-500 transition-all duration-200" />
+              <Button variant={"ghost"} title="Ask to AI about this post">
+                <img src={AI_ICON} alt="AI" className="w-4 h-4" />
               </Button>
             )}
 

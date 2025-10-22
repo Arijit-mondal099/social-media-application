@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { defaultProfileImage } from "@/assets";
+import { AI_ICON, defaultProfileImage } from "@/assets";
 import { formatDistanceStrict } from "date-fns";
 import { AutoPlayVideo } from "./AutoPlayVideo";
 import { Button } from "../ui/button";
@@ -12,7 +12,6 @@ import {
   Share,
   Send,
   ChevronLeft,
-  Star,
   Loader2,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -197,8 +196,8 @@ const PostComment: React.FC = () => {
               </div>
             </div>
 
-            <Button variant={"ghost"} title="Ask AI about this post">
-              <Star className="fill-blue-200 text-blue-200 h-5 w-5 hover:fill-blue-500 hover:text-blue-500 transition-all duration-200" />
+            <Button variant={"ghost"} title="Ask to AI about this post">
+              <img src={AI_ICON} alt="AI" className="w-4 h-4" />
             </Button>
           </div>
 

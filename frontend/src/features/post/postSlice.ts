@@ -5,10 +5,13 @@ import {
   getPostById,
   getUserFeed,
   likeToAnPost,
+  getReels,
 } from "./postThunks";
+import { IReel } from "@/pages/ReelsPage";
 
 interface IPostSlice {
   posts: IPost[];
+  reels: IReel[];
   post: IPost | null;
   loading: boolean;
   error: string | null;
@@ -16,18 +19,23 @@ interface IPostSlice {
 
 const initialState: IPostSlice = {
   posts: [],
+  reels: [],
   post: null,
   loading: false,
   error: null,
 };
 
-const counterSlice = createSlice({
+const postSlice = createSlice({
   name: "post",
   initialState,
-  reducers: {},
+  reducers: {
+    resetReels: (state) => {
+      state.reels = [];
+    },
+  },
   extraReducers: (builder) => {
     builder
-      // get user feed posts
+      // Get user feed posts
       .addCase(getUserFeed.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -41,29 +49,78 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // toggle like to a post
+
+      // Get reels
+      .addCase(getReels.pending, (state) => {
+        if (state.reels.length === 0) {
+          state.loading = true;
+        }
+        state.error = null;
+      })
+      .addCase(getReels.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const newReel = action.payload.data.reel;
+
+        // Append new reel if it exists and not already in array
+        if (newReel && !state.reels.some((r) => r._id === newReel._id)) {
+          state.reels.push(newReel);
+        }
+      })
+      .addCase(getReels.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Toggle like to a post/reel
       .addCase(likeToAnPost.pending, (state) => {
         state.error = null;
       })
       .addCase(likeToAnPost.fulfilled, (state, action) => {
         state.error = null;
+        const { postId, userId, flag } = action.payload;
+
+        // Update in posts array
         state.posts = state.posts.map((post) => {
-          if (post._id === action.payload.postId) {
+          if (post._id === postId) {
             return {
               ...post,
-              likes: action.payload.flag
-                ? [...post.likes, action.payload.userId]
-                : post.likes.filter((id) => id !== action.payload.userId),
+              likes: flag
+                ? [...post.likes, userId]
+                : post.likes.filter((id) => id !== userId),
             };
           }
           return post;
         });
+
+        // Update in reels array
+        state.reels = state.reels.map((reel) => {
+          if (reel._id === postId) {
+            return {
+              ...reel,
+              likes: flag
+                ? [...reel.likes, userId]
+                : reel.likes.filter((id) => id !== userId),
+            };
+          }
+          return reel;
+        });
+
+        // Update single post
+        if (state.post && state.post._id === postId) {
+          state.post = {
+            ...state.post,
+            likes: flag
+              ? [...state.post.likes, userId]
+              : state.post.likes.filter((id) => id !== userId),
+          };
+        }
       })
       .addCase(likeToAnPost.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload as string;
       })
-      // get post by id
+
+      // Get post by id
       .addCase(getPostById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -77,6 +134,7 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // add comment to a post
       .addCase(addCommentOnPost.pending, (state) => {
         state.error = null;
@@ -91,4 +149,5 @@ const counterSlice = createSlice({
   },
 });
 
-export default counterSlice.reducer;
+export const { resetReels } = postSlice.actions;
+export default postSlice.reducer;
