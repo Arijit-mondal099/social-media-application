@@ -13,8 +13,8 @@ interface IResponseFeed {
       pageSize: number;
       totalPosts: number;
       totalPages: number;
-      hasNextPage: number;
-      hasPreviousPage: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
     };
     categories: {
       following: number;
@@ -47,11 +47,12 @@ interface AddCommentResponse {
 
 export const getUserFeed = createAsyncThunk<
   IResponseFeed,
-  void,
+  { page?: number },
   { rejectValue: string }
->("post/getUserFeed", async (_, { rejectWithValue }) => {
+>("post/getUserFeed", async ({ page = 1 }, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.get<IResponseFeed>("/posts", {
+      params: { page, limit: 10 },
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -84,7 +85,7 @@ export const likeToAnPost = createAsyncThunk<
   } catch (err: unknown) {
     const error = err as AxiosError<{ message: string }>;
     return rejectWithValue(
-      error.response?.data?.message || "Faild to like or unlike the post"
+      error.response?.data?.message || "Failed to like or unlike the post"
     );
   }
 });
@@ -107,7 +108,7 @@ export const getPostById = createAsyncThunk<
   } catch (err: unknown) {
     const error = err as AxiosError<{ message: string }>;
     return rejectWithValue(
-      error.response?.data?.message || "Faild to like or unlike the post"
+      error.response?.data?.message || "Failed to fetch post"
     );
   }
 });

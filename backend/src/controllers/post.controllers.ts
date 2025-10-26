@@ -463,12 +463,13 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    // Pagination parameters
+    // ✅ Pagination parameters (same as reels)
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(10, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
@@ -545,6 +546,16 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
       ...trendingPosts.map((p) => ({ ...p, priority: 4 })),
     ];
 
+    // fallback: if nothing found
+    if (allPosts.length === 0) {
+      const fallback = await Post.find({})
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "username profileImage name")
+        .lean();
+
+      allPosts.push(...fallback.map((p) => ({ ...p, priority: 5 })));
+    }
+
     allPosts.sort((a, b) => {
       if (a.priority !== b.priority) return a.priority - b.priority;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -559,12 +570,11 @@ export const userPostFeed = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Calculate pagination
+    // ✅ Pagination logic (same as getReels)
     const totalPosts = combinedFeed.length;
-    const totalPages = Math.ceil(totalPosts / limit);
+    const totalPages = Math.ceil(totalPosts / limit) || 1;
     const paginatedFeed = combinedFeed.slice(skip, skip + limit);
 
-    // Validate page number
     if (page > totalPages && totalPosts > 0) {
       return res.status(400).json({
         success: false,

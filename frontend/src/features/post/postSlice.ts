@@ -43,7 +43,19 @@ const postSlice = createSlice({
       .addCase(getUserFeed.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.posts = action.payload.data.feed;
+        const newFeed = action.payload.data.feed;
+        
+        // On first page, replace; on subsequent pages, append
+        if (action.meta.arg.page === 1) {
+          state.posts = newFeed;
+        } else {
+          // Remove duplicates before appending
+          const existingIds = new Set(state.posts.map((p) => p._id));
+          const uniqueNewPosts = newFeed.filter(
+            (p) => !existingIds.has(p._id)
+          );
+          state.posts.push(...uniqueNewPosts);
+        }
       })
       .addCase(getUserFeed.rejected, (state, action) => {
         state.loading = false;
