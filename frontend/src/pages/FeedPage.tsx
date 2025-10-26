@@ -18,14 +18,6 @@ export const FeedPage: React.FC = () => {
   const { posts, loading } = useAppSelector((state) => state.post);
   const dispatch = useAppDispatch();
 
-  const toggleLike = (postId: string) => {
-    console.log("Liked post", postId);
-  };
-
-  const toggleBookmark = (postId: string) => {
-    console.log("Bookmarked post", postId);
-  };
-
   useEffect(() => {
     dispatch(getUserFeed());
   }, [dispatch]);
@@ -87,11 +79,7 @@ export const FeedPage: React.FC = () => {
               transition={{ delay: index * 0.1 }}
               className="w-full"
             >
-              <PostCard
-                post={post}
-                onLike={toggleLike}
-                onBookmark={toggleBookmark}
-              />
+              <PostCard post={post} />
             </motion.div>
           ))}
     </motion.div>

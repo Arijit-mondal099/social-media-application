@@ -18,17 +18,23 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { likeToAnPost } from "@/features/post/postThunks";
 import { toast } from "sonner";
 import { useAppSelector } from "@/hooks/useAppSelector";
-import { bookmarkPost } from "@/features/user/userThunks";
+import {
+  bookmarkPost,
+  likeToAnPostOnSelectedUser,
+} from "@/features/user/userThunks";
 import { useNavigate } from "react-router-dom";
 
 interface PostCardProps {
   post: IPost;
-  onLike?: (postId: string) => void;
-  onBookmark?: (postId: string) => void;
   onDelete?: (postId: string) => void;
+  isSelectedUserProfile?: boolean;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
+export const PostCard: React.FC<PostCardProps> = ({
+  post,
+  onDelete,
+  isSelectedUserProfile,
+}) => {
   const { user } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -37,10 +43,15 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   const isPostBookmarked = user?.savedPosts.some((p) => p._id === post._id);
 
   const handleLikeToggleToPost = async (postId: string) => {
-    const res = await dispatch(likeToAnPost(postId));
+    let res = null;
 
-    if (!likeToAnPost.fulfilled.match(res)) {
-      toast.success(res.payload || "Unable to like the post");
+    if (isSelectedUserProfile) {
+      res = await dispatch(likeToAnPostOnSelectedUser(postId));
+      if (!likeToAnPostOnSelectedUser.fulfilled.match(res))
+        toast.error(res.payload);
+    } else {
+      res = await dispatch(likeToAnPost(postId));
+      if (!likeToAnPost.fulfilled.match(res)) toast.error(res.payload);
     }
   };
 
@@ -64,7 +75,10 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div
+              className="flex items-center space-x-3 cursor-pointer"
+              onClick={() => navigate(`/profile/${post.createdBy.username}`)}
+            >
               <motion.div whileHover={{ scale: 1.1 }}>
                 <Avatar className="w-10 h-10">
                   <AvatarImage

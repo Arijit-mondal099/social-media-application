@@ -5,8 +5,10 @@ import {
   deletePost,
   deleteUserAccount,
   getBookmarkPosts,
+  getProfileByUsername,
   getUserPosts,
   imagePost,
+  likeToAnPostOnSelectedUser,
   login,
   profile,
   register,
@@ -20,6 +22,7 @@ import {
 
 export interface IUserState {
   user: IUser | null;
+  selectedUserProfile: IUser | null;
   token: string | null;
   posts: IPost[];
   bookmarkedPosts: IPost[];
@@ -30,6 +33,7 @@ export interface IUserState {
 
 const initialState: IUserState = {
   user: JSON.parse(localStorage.getItem("user") || "null"),
+  selectedUserProfile: null,
   token: localStorage.getItem("token"),
   posts: [],
   bookmarkedPosts: [],
@@ -63,6 +67,7 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // login user
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -77,7 +82,8 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // fetch user profile
+
+      // fetch user profile (for auth as well)
       .addCase(profile.pending, (state) => {
         state.authChecking = true;
         state.error = null;
@@ -91,7 +97,63 @@ const counterSlice = createSlice({
         state.authChecking = false;
         state.error = action.payload as string;
       })
-      // text
+
+      // get profile by username
+      .addCase(getProfileByUsername.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getProfileByUsername.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedUserProfile = action.payload.user!;
+      })
+      .addCase(getProfileByUsername.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // toggle like to selected user profile
+      .addCase(likeToAnPostOnSelectedUser.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(likeToAnPostOnSelectedUser.fulfilled, (state, action) => {
+        state.error = null;
+        const { postId, userId, flag } = action.payload;
+
+        // selected user profile posts
+        if (state.selectedUserProfile?.posts) {
+          state.selectedUserProfile.posts = state.selectedUserProfile.posts.map(
+            (post) =>
+              post._id === postId
+                ? {
+                    ...post,
+                    likes: flag
+                      ? [...(post.likes || []), userId]
+                      : (post.likes || []).filter((id) => id !== userId),
+                  }
+                : post
+          );
+        }
+
+        // bookmarked posts
+        if (state.bookmarkedPosts) {
+          state.bookmarkedPosts = state.bookmarkedPosts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  likes: flag
+                    ? [...(post.likes || []), userId]
+                    : (post.likes || []).filter((id) => id !== userId),
+                }
+              : post
+          );
+        }
+      })
+      .addCase(likeToAnPostOnSelectedUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+      // text post
       .addCase(textPost.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -105,7 +167,8 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // image
+
+      // image post
       .addCase(imagePost.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -119,7 +182,8 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // video
+
+      // video post
       .addCase(videoPost.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -133,7 +197,8 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // user profile
+
+      // get user posts
       .addCase(getUserPosts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -147,6 +212,7 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // delete post
       .addCase(deletePost.pending, (state) => {
         state.loading = true;
@@ -161,6 +227,7 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // update user profile
       .addCase(updateProfile.pending, (state) => {
         state.loading = true;
@@ -169,15 +236,17 @@ const counterSlice = createSlice({
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.user = {
-          ...state.user,
-          ...action.payload.user,
-        };
+        if (state.user)
+          state.user = {
+            ...state.user,
+            ...action.payload.user,
+          };
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // update user profile image
       .addCase(updateProfileImage.pending, (state) => {
         state.loading = true;
@@ -186,12 +255,14 @@ const counterSlice = createSlice({
       .addCase(updateProfileImage.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.user = { ...state.user, profileImage: action.payload.url };
+        if (state.user)
+          state.user = { ...state.user, profileImage: action.payload.url };
       })
       .addCase(updateProfileImage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // update user email
       .addCase(updateEmail.pending, (state) => {
         state.loading = true;
@@ -200,12 +271,14 @@ const counterSlice = createSlice({
       .addCase(updateEmail.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.user = { ...state.user, email: action.payload.email };
+        if (state.user)
+          state.user = { ...state.user, email: action.payload.email };
       })
       .addCase(updateEmail.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // change password
       .addCase(updatePassword.pending, (state) => {
         state.loading = true;
@@ -219,6 +292,7 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // toggle bookmark post
       .addCase(bookmarkPost.pending, (state) => {
         state.error = null;
@@ -247,6 +321,7 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // fetch bookmark posts
       .addCase(getBookmarkPosts.pending, (state) => {
         state.loading = true;
@@ -261,6 +336,7 @@ const counterSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // delete usee account
       .addCase(deleteUserAccount.pending, (state) => {
         state.loading = true;

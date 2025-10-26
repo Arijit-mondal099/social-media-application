@@ -103,7 +103,7 @@ const AppRoutes: React.FC = () => {
                 }
               />
               <Route
-                path="/profile"
+                path="/profile/:username"
                 element={
                   <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
                     <motion.div

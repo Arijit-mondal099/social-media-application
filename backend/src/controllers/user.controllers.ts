@@ -399,6 +399,55 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 };
 
 /**
+ * ROUTE: /api/v1/users/:username
+ * METHOD: GET
+ */
+export const getProfileByUsername = async (req: AuthRequest, res: Response) => {
+  try {
+    const { username } = req.params;
+
+    const user = await User.findOne({ username })
+      .select("-password")
+      .populate({
+        path: "posts",
+        options: { sort: { createdAt: -1 } },
+        populate: {
+          path: "createdBy",
+          select: "username email profileImage name",
+        },
+      })
+      .populate({
+        path: "savedPosts",
+        options: { sort: { createdAt: -1 } },
+        populate: {
+          path: "createdBy",
+          select: "username email profileImage name",
+        },
+      });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found unauthorized request!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "success",
+      user,
+    });
+  } catch (error) {
+    console.error("Profile get error", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      error: error,
+    });
+  }
+};
+
+/**
  * ROUTE: /api/v1/users/posts
  * METHOD: GET
  */

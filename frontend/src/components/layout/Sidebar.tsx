@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Compass, User, Settings, Plus, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { defaultProfileImage } from "@/assets";
 
 interface SidebarProps {
   onCreatePost?: () => void;
@@ -18,7 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCreatePost }) => {
     { icon: Home, label: "Home", path: "/feed" },
     { icon: Compass, label: "Explore", path: "/explore" },
     { icon: Video, label: "Reels", path: "/reels" },
-    { icon: User, label: "Profile", path: "/profile" },
+    { icon: User, label: "Profile", path: `/profile/${user?.username}` },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
@@ -34,8 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCreatePost }) => {
         <div className="p-4 rounded-lg bg-muted/50 mb-6">
           <div className="flex items-center space-x-3">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={user?.profileImage} />
-              <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
+              <AvatarImage src={user?.profileImage || defaultProfileImage} />
             </Avatar>
             <div className="text-left">
               <p className="font-semibold truncate">{user?.name}</p>

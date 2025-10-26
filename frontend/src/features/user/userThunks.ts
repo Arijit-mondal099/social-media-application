@@ -17,6 +17,20 @@ interface IResponsePost {
   posts?: IPost[];
 }
 
+interface ILikePostResponse {
+  success: boolean;
+  message: string;
+  flag: boolean;
+  userId: string;
+  postId: string;
+}
+
+interface IUpdateUserProfileResponse {
+  success: boolean;
+  message: string;
+  user: { name: string; username: string; link: string; bio: string };
+}
+
 export const register = createAsyncThunk<
   IAuthResponse,
   IAuth,
@@ -69,6 +83,53 @@ export const profile = createAsyncThunk<
     const error = err as AxiosError<{ message: string }>;
     return rejectWithValue(
       error.response?.data?.message || "Failed to fetch profile"
+    );
+  }
+});
+
+export const getProfileByUsername = createAsyncThunk<
+  IAuthResponse,
+  string,
+  { rejectValue: string }
+>("user/getProfileByUsername", async (username, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get<IAuthResponse>(
+      `/users/${username}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch profile"
+    );
+  }
+});
+
+export const likeToAnPostOnSelectedUser = createAsyncThunk<
+  ILikePostResponse,
+  string,
+  { rejectValue: string }
+>("post/likeToAnPostOnSelectedUser", async (postId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put<ILikePostResponse>(
+      `/posts/${postId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Faild to like or unlike the post"
     );
   }
 });
@@ -188,11 +249,7 @@ export const deletePost = createAsyncThunk<
 });
 
 export const updateProfile = createAsyncThunk<
-  {
-    success: boolean;
-    message: string;
-    user: { name: string; username: string; link: string; bio: string };
-  },
+  IUpdateUserProfileResponse,
   { name: string; username: string; link: string; bio: string },
   { rejectValue: string }
 >("user/updateProfile", async (data, { rejectWithValue }) => {

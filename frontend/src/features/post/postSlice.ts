@@ -52,17 +52,13 @@ const postSlice = createSlice({
 
       // Get reels
       .addCase(getReels.pending, (state) => {
-        if (state.reels.length === 0) {
-          state.loading = true;
-        }
+        if (state.reels.length === 0) state.loading = true;
         state.error = null;
       })
       .addCase(getReels.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
         const newReel = action.payload.data.reel;
-
-        // Append new reel if it exists and not already in array
         if (newReel && !state.reels.some((r) => r._id === newReel._id)) {
           state.reels.push(newReel);
         }

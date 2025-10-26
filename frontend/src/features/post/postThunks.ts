@@ -42,7 +42,7 @@ interface IGetPostByIdResponse {
 interface AddCommentResponse {
   success: boolean;
   message: string;
-  comment: IComment[];
+  comment: IComment;
 }
 
 export const getUserFeed = createAsyncThunk<

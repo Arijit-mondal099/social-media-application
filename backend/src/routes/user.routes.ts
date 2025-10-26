@@ -4,6 +4,7 @@ import {
   changePassword,
   deleteUserAccount,
   getProfile,
+  getProfileByUsername,
   getUserPosts,
   login,
   register,
@@ -27,5 +28,6 @@ router.route("/updateprofile-image").put(auth, upload.single("image"), updatePro
 router.route("/change-email").put(auth, changeEmail);
 router.route("/change-password").put(auth, changePassword);
 router.route("/delete-account").delete(auth, deleteUserAccount);
+router.route("/:username").get(auth, getProfileByUsername);
 
 export default router;

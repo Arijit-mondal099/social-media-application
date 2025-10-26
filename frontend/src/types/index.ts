@@ -70,9 +70,3 @@ export interface Conversation {
   lastMessage: Message;
   unreadCount: number;
 }
-
-export interface AuthState {
-  user: IUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
