@@ -31,6 +31,13 @@ interface IUpdateUserProfileResponse {
   user: { name: string; username: string; link: string; bio: string };
 }
 
+interface IToggleFollowResponse {
+  success: boolean;
+  message: string;
+  followingUser: string;
+  followersUser: string;
+}
+
 export const register = createAsyncThunk<
   IAuthResponse,
   IAuth,
@@ -130,6 +137,30 @@ export const likeToAnPostOnSelectedUser = createAsyncThunk<
     const error = err as AxiosError<{ message: string }>;
     return rejectWithValue(
       error.response?.data?.message || "Faild to like or unlike the post"
+    );
+  }
+});
+
+export const toggleFollow = createAsyncThunk<
+  IToggleFollowResponse,
+  string,
+  { rejectValue: string }
+>("user/toggleFollow", async (userId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put<IToggleFollowResponse>(
+      `/users/toggle-follow/${userId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    const error = err as AxiosError<{ message: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to toggle follow/unfollow"
     );
   }
 });

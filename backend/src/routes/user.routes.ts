@@ -9,6 +9,7 @@ import {
   login,
   register,
   savePost,
+  toggleFollow,
   updateProfileImage,
   updateProfileInfo,
 } from "../controllers/user.controllers";
@@ -29,5 +30,6 @@ router.route("/change-email").put(auth, changeEmail);
 router.route("/change-password").put(auth, changePassword);
 router.route("/delete-account").delete(auth, deleteUserAccount);
 router.route("/:username").get(auth, getProfileByUsername);
+router.route("/toggle-follow/:userId").put(auth, toggleFollow);
 
 export default router;

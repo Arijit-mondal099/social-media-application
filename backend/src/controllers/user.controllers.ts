@@ -5,6 +5,7 @@ import { generateToken } from "../utils/generateToken";
 import { AuthRequest } from "../middlewares/auth";
 import { Post } from "../models/post.model";
 import { uploadFile } from "../utils/uploadToImagekit";
+import mongoose from "mongoose";
 
 /**
  * ROUTE: /api/v1/users/register
@@ -443,6 +444,70 @@ export const getProfileByUsername = async (req: AuthRequest, res: Response) => {
       success: false,
       message: "Internal server error!",
       error: error,
+    });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/users/toggle-follow/:userId
+ * METHOD: PUT
+ */
+export const toggleFollow = async (req: AuthRequest, res: Response) => {
+  try {
+    const _id = req.user?._id;
+    const userId = req.params.userId as string;
+
+    if (!_id || !_id.toString() || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user information!",
+      });
+    }
+
+    if (_id.toString() === userId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You can't follow yourself!",
+      });
+    }
+
+    const me = await User.findById(_id);
+    const followingUser = await User.findById(userId);
+
+    if (!me || !followingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User account not found!",
+      });
+    }
+
+    const isAlreadyFollowed = me.following.some((id) => id.toString() === userId.toString());
+
+    if (isAlreadyFollowed) {
+      // 🔹 Unfollow
+      me.following = me.following.filter((u) => u.toString() !== userId.toString());
+      followingUser.followers = followingUser.followers.filter((u) => u.toString() !== _id.toString());
+    } else {
+      // 🔹 Follow
+      me.following.push(new mongoose.Types.ObjectId(userId));
+      followingUser.followers.push(new mongoose.Types.ObjectId(_id));
+    }
+
+    await me.save();
+    await followingUser.save();
+
+    return res.status(200).json({
+      success: true,
+      message: isAlreadyFollowed ? "Unfollowed" : "Followed",
+      followingUser: userId,
+      followersUser: _id,
+    });
+  } catch (error) {
+    console.error("Toggle follow error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      error,
     });
   }
 };

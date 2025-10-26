@@ -12,6 +12,7 @@ import {
   getBookmarkPosts,
   getProfileByUsername,
   getUserPosts,
+  toggleFollow,
   // followUnfollowUser, // wire this thunk when ready
 } from "@/features/user/userThunks";
 import { toast } from "sonner";
@@ -40,15 +41,14 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleFollowToggle = async () => {
-    // wire this when you have the thunk:
-    // if (!selectedUserProfile?._id) return;
-    // const res = await dispatch(followUnfollowUser(selectedUserProfile._id));
-    // if (followUnfollowUser.fulfilled.match(res)) {
-    //   toast.success(res.payload.message);
-    //   dispatch(getProfileByUsername(username || ""));
-    // } else {
-    //   toast.error(res.payload as string);
-    // }
+    if (!selectedUserProfile || !selectedUserProfile?._id) return;
+
+    const res = await dispatch(toggleFollow(selectedUserProfile._id));
+    if (toggleFollow.fulfilled.match(res)) {
+      toast.success(res.payload.message);
+    } else {
+      toast.error(res.payload);
+    }
   };
 
   useEffect(() => {

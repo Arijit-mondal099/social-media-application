@@ -13,6 +13,7 @@ import {
   profile,
   register,
   textPost,
+  toggleFollow,
   updateEmail,
   updatePassword,
   updateProfile,
@@ -150,6 +151,28 @@ const counterSlice = createSlice({
         }
       })
       .addCase(likeToAnPostOnSelectedUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+      // toggle follow/unfollow
+      .addCase(toggleFollow.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(toggleFollow.fulfilled, (state, action) => {
+        state.error = null;
+        const { message, followersUser, followingUser } = action.payload;
+
+        if (!state.selectedUserProfile || !state.user) return;
+
+        if (message.toLowerCase() === "followed") {
+          state.selectedUserProfile.followers.push(followersUser);
+          state.user.following.push(followingUser)
+        } else {
+          state.selectedUserProfile.followers = state.selectedUserProfile.followers.filter(u => u !== followersUser)
+          state.user.following = state.user.following.filter(u => u !== followingUser)
+        }
+      })
+      .addCase(toggleFollow.rejected, (state, action) => {
         state.error = action.payload as string;
       })
 
