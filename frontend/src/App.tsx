@@ -25,7 +25,8 @@ import { EditProfile } from "@/components/common/EditProfile";
 import { Privacy } from "@/components/common/Privacy";
 import { Security } from "@/components/common/Security";
 import PostComment from "@/components/common/PostComment";
-import { ReelsPage } from "./pages/ReelsPage";
+import { ReelsPage } from "@/pages/ReelsPage";
+import TrendingPostsPage from "@/pages/TrendingPostsPage";
 
 const AppRoutes: React.FC = () => {
   const { token, authChecking } = useAppSelector((state) => state.user);
@@ -203,6 +204,21 @@ const AppRoutes: React.FC = () => {
                       transition={{ duration: 0.3 }}
                     >
                       <Privacy />
+                    </motion.div>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/posts/trending/:tag"
+                element={
+                  <Layout onCreatePost={() => setIsCreatePostModalOpen(true)}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <TrendingPostsPage />
                     </motion.div>
                   </Layout>
                 }

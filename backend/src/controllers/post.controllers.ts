@@ -826,3 +826,207 @@ export const getReels = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+/**
+ * ROUTE: /api/v1/posts/explore
+ * METHOD: GET
+ *
+ * Returns:
+ * - Trending topics (hashtags)
+ * - Trending posts (by engagement)
+ * - Popular users (by followers)
+ */
+export const getExploreContent = async (req: AuthRequest, res: Response) => {
+  try {
+    const timeframeMs = 60 * 24 * 60 * 60 * 1000; // Last 7 days
+    const sevenDaysAgo = new Date(Date.now() - timeframeMs);
+
+    // 1. FETCH TRENDING TOPICS (hashtags)
+    const trendingTopics = await Post.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sevenDaysAgo },
+          tags: { $exists: true, $ne: [] },
+        },
+      },
+      {
+        $unwind: "$tags",
+      },
+      {
+        $group: {
+          _id: "$tags",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $project: {
+          tag: "$_id",
+          postCount: "$count",
+          _id: 0,
+        },
+      },
+    ]);
+
+    // 2. FETCH TRENDING IMAGE POSTS (likes >= 3 or comments >= 3)
+    const trendingPosts = await Post.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sevenDaysAgo },
+          postType: { $in: ["image", "video"] },
+        },
+      },
+      {
+        $addFields: {
+          likeCount: { $size: { $ifNull: ["$likes", []] } },
+          commentCount: { $size: { $ifNull: ["$comments", []] } },
+        },
+      },
+      {
+        $match: {
+          $or: [{ likeCount: { $gte: 3 } }, { commentCount: { $gte: 3 } }],
+        },
+      },
+      {
+        $addFields: {
+          engagementScore: {
+            $add: [
+              { $multiply: ["$likeCount", 3] },
+              { $multiply: ["$commentCount", 3] },
+            ],
+          },
+        },
+      },
+      {
+        $sort: { engagementScore: -1, createdAt: -1 },
+      },
+      {
+        $limit: 20,
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "creator",
+        },
+      },
+      { $unwind: "$creator" },
+      {
+        $project: {
+          _id: 1,
+          postType: 1,
+          text: 1,
+          image: 1,
+          video: 1,
+          tags: 1,
+          likeCount: 1,
+          commentCount: 1,
+          engagementScore: 1,
+          createdAt: 1,
+          creator: {
+            _id: 1,
+            username: 1,
+            displayName: "$creator.name",
+            profileImage: "$creator.profileImage",
+          },
+        },
+      },
+    ]);
+
+    // 3. FETCH POPULAR USERS
+    const popularUsers = await User.aggregate([
+      {
+        $addFields: {
+          followerCount: { $size: { $ifNull: ["$followers", []] } },
+        },
+      },
+      {
+        $match: {
+          $expr: { $gte: ["$followerCount", 1] },
+        },
+      },
+      {
+        $sort: { followerCount: -1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          displayName: "$name",
+          profileImage: 1,
+          bio: 1,
+          followerCount: 1,
+          isFollowedByUser: {
+            $in: [
+              { $toString: req.user?._id },
+              {
+                $map: {
+                  input: "$followers",
+                  as: "follower",
+                  in: { $toString: "$$follower" },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        trendingTopics,
+        trendingPosts,
+        popularUsers,
+      },
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    console.error("Explore content fetching error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while fetching explore content",
+    });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/posts/trending/:tag
+ * METHOD: GET
+ */
+export const getTrendingPostsByTag = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const { tag } = req.params;
+
+    const posts = await Post.find({
+      tags: { $in: [tag] },
+    })
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "username profileImage name")
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: "Posts fetched successfully",
+      posts,
+    });
+  } catch (error) {
+    console.error("Fetching reels error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while fetching reels",
+    });
+  }
+};

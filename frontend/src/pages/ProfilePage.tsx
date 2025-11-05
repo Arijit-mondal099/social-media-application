@@ -13,7 +13,6 @@ import {
   getProfileByUsername,
   getUserPosts,
   toggleFollow,
-  // followUnfollowUser, // wire this thunk when ready
 } from "@/features/user/userThunks";
 import { toast } from "sonner";
 import { PostCard } from "@/components/common/PostCard";

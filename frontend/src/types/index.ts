@@ -70,3 +70,37 @@ export interface Conversation {
   lastMessage: Message;
   unreadCount: number;
 }
+
+export interface IExplore {
+  data: {
+    trendingTopics: Array<{ tag: string; postCount: number }>;
+    trendingPosts: Array<{
+      _id: string;
+      postType: string;
+      text: string;
+      image: string;
+      video: string;
+      tags: string[];
+      createdAt: Date;
+      likeCount: number;
+      commentCount: number;
+      engagementScore: number;
+      creator: {
+        _id: string;
+        username: string;
+        displayName: string;
+        profileImage: string;
+      };
+    }>;
+    popularUsers: Array<{
+      _id: string;
+      username: string;
+      profileImage: string;
+      bio: string;
+      followerCount: number;
+      displayName: string;
+      isFollowedByUser: boolean;
+    }>;
+  };
+  timestamp: Date;
+}

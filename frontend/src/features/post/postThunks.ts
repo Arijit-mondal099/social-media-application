@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
-import { IComment, IPost } from "@/types";
+import { IComment, IExplore as IExploreResponse, IPost } from "@/types";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
 
@@ -43,6 +43,12 @@ interface AddCommentResponse {
   success: boolean;
   message: string;
   comment: IComment;
+}
+
+interface IGetTrendingPostsByTagResponse {
+  success: boolean;
+  message: string;
+  posts: IPost[];
 }
 
 export const getUserFeed = createAsyncThunk<
@@ -153,3 +159,49 @@ export const getReels = createAsyncThunk(
     }
   }
 );
+
+export const getExploreContent = createAsyncThunk<
+  IExploreResponse,
+  void,
+  { rejectValue: string }
+>("post/explore-data", async (_, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get<IExploreResponse>(
+      "/posts/explore",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    const error = err as AxiosError<{ message?: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to add comment to the post"
+    );
+  }
+});
+
+export const getTrendingPostsByTag = createAsyncThunk<
+  IGetTrendingPostsByTagResponse,
+  string,
+  { rejectValue: string }
+>("post/trending-posts-data", async (tag, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get<IGetTrendingPostsByTagResponse>(
+      `/posts/trending/${tag}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    const error = err as AxiosError<{ message?: string }>;
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to add comment to the post"
+    );
+  }
+});

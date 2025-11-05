@@ -1,4 +1,4 @@
-import { IPost } from "@/types";
+import { IExplore, IPost } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
 import {
   addCommentOnPost,
@@ -6,12 +6,15 @@ import {
   getUserFeed,
   likeToAnPost,
   getReels,
+  getExploreContent,
+  getTrendingPostsByTag,
 } from "./postThunks";
 import { IReel } from "@/pages/ReelsPage";
 
 interface IPostSlice {
   posts: IPost[];
   reels: IReel[];
+  explore: IExplore | null;
   post: IPost | null;
   loading: boolean;
   error: string | null;
@@ -20,6 +23,7 @@ interface IPostSlice {
 const initialState: IPostSlice = {
   posts: [],
   reels: [],
+  explore: null,
   post: null,
   loading: false,
   error: null,
@@ -38,27 +42,27 @@ const postSlice = createSlice({
       // Get user feed posts
       .addCase(getUserFeed.pending, (state) => {
         state.loading = true;
+        state.posts = [];
         state.error = null;
       })
       .addCase(getUserFeed.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
         const newFeed = action.payload.data.feed;
-        
+
         // On first page, replace; on subsequent pages, append
         if (action.meta.arg.page === 1) {
           state.posts = newFeed;
         } else {
           // Remove duplicates before appending
           const existingIds = new Set(state.posts.map((p) => p._id));
-          const uniqueNewPosts = newFeed.filter(
-            (p) => !existingIds.has(p._id)
-          );
+          const uniqueNewPosts = newFeed.filter((p) => !existingIds.has(p._id));
           state.posts.push(...uniqueNewPosts);
         }
       })
       .addCase(getUserFeed.rejected, (state, action) => {
         state.loading = false;
+        state.posts = [];
         state.error = action.payload as string;
       })
 
@@ -152,6 +156,39 @@ const postSlice = createSlice({
         state.post?.comments.unshift(action.payload.comment);
       })
       .addCase(addCommentOnPost.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+      // get explore content
+      .addCase(getExploreContent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getExploreContent.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.explore = action.payload;
+      })
+      .addCase(getExploreContent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // trending posts
+      .addCase(getTrendingPostsByTag.pending, (state) => {
+        state.loading = true;
+        state.posts = [];
+        state.error = null;
+      })
+      .addCase(getTrendingPostsByTag.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        if (!action.payload.posts) return;
+        state.posts = action.payload.posts;
+      })
+      .addCase(getTrendingPostsByTag.rejected, (state, action) => {
+        state.loading = false;
+        state.posts = [];
         state.error = action.payload as string;
       });
   },
