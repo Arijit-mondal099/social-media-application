@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 
 const TrendingPostsPage: React.FC = () => {
-  const { posts, loading } = useAppSelector((state) => state.post);
+  const { trendingPosts, loading } = useAppSelector((state) => state.post);
   const { tag } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const TrendingPostsPage: React.FC = () => {
         <h1 className="text-2xl font-bold mb-6 italic">#{tag}</h1>
       </motion.div>
 
-      {posts.length === 0 && loading
+      {trendingPosts.length === 0 && loading
         ? Array.from({ length: 5 }).map((_, i) => (
             <Card className="bg-card rounded-lg p-4 space-y-4" key={i}>
               <div className="flex items-start justify-between">
@@ -76,7 +76,7 @@ const TrendingPostsPage: React.FC = () => {
               </div>
             </Card>
           ))
-        : posts.map((post, index) => (
+        : trendingPosts.map((post, index) => (
             <motion.div
               key={post._id}
               initial={{ opacity: 0, y: 50 }}
@@ -90,7 +90,7 @@ const TrendingPostsPage: React.FC = () => {
 
       {/* Loading skeleton for subsequent pages */}
       {loading &&
-        posts.length > 0 &&
+        trendingPosts.length > 0 &&
         Array.from({ length: 2 }).map((_, i) => (
           <Card
             className="bg-card rounded-lg p-4 space-y-4"

@@ -14,6 +14,7 @@ import { IReel } from "@/pages/ReelsPage";
 interface IPostSlice {
   posts: IPost[];
   reels: IReel[];
+  trendingPosts: IPost[];
   explore: IExplore | null;
   post: IPost | null;
   loading: boolean;
@@ -23,6 +24,7 @@ interface IPostSlice {
 const initialState: IPostSlice = {
   posts: [],
   reels: [],
+  trendingPosts: [],
   explore: null,
   post: null,
   loading: false,
@@ -42,27 +44,20 @@ const postSlice = createSlice({
       // Get user feed posts
       .addCase(getUserFeed.pending, (state) => {
         state.loading = true;
-        state.posts = [];
         state.error = null;
       })
       .addCase(getUserFeed.fulfilled, (state, action) => {
         state.loading = false;
-        state.error = null;
-        const newFeed = action.payload.data.feed;
+        const newPosts = action.payload?.data.feed || [];
 
-        // On first page, replace; on subsequent pages, append
         if (action.meta.arg.page === 1) {
-          state.posts = newFeed;
+          state.posts = newPosts;
         } else {
-          // Remove duplicates before appending
-          const existingIds = new Set(state.posts.map((p) => p._id));
-          const uniqueNewPosts = newFeed.filter((p) => !existingIds.has(p._id));
-          state.posts.push(...uniqueNewPosts);
+          state.posts = [...state.posts, ...newPosts];
         }
       })
       .addCase(getUserFeed.rejected, (state, action) => {
         state.loading = false;
-        state.posts = [];
         state.error = action.payload as string;
       })
 
@@ -177,18 +172,18 @@ const postSlice = createSlice({
       // trending posts
       .addCase(getTrendingPostsByTag.pending, (state) => {
         state.loading = true;
-        state.posts = [];
+        state.trendingPosts = [];
         state.error = null;
       })
       .addCase(getTrendingPostsByTag.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
         if (!action.payload.posts) return;
-        state.posts = action.payload.posts;
+        state.trendingPosts = action.payload.posts;
       })
       .addCase(getTrendingPostsByTag.rejected, (state, action) => {
         state.loading = false;
-        state.posts = [];
+        state.trendingPosts = [];
         state.error = action.payload as string;
       });
   },
