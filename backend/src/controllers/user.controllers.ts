@@ -481,12 +481,18 @@ export const toggleFollow = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const isAlreadyFollowed = me.following.some((id) => id.toString() === userId.toString());
+    const isAlreadyFollowed = me.following.some(
+      (id) => id.toString() === userId.toString()
+    );
 
     if (isAlreadyFollowed) {
       // 🔹 Unfollow
-      me.following = me.following.filter((u) => u.toString() !== userId.toString());
-      followingUser.followers = followingUser.followers.filter((u) => u.toString() !== _id.toString());
+      me.following = me.following.filter(
+        (u) => u.toString() !== userId.toString()
+      );
+      followingUser.followers = followingUser.followers.filter(
+        (u) => u.toString() !== _id.toString()
+      );
     } else {
       // 🔹 Follow
       me.following.push(new mongoose.Types.ObjectId(userId));
@@ -576,6 +582,45 @@ export const deleteUserAccount = async (req: AuthRequest, res: Response) => {
       success: false,
       message: "Internal server error!",
       error: error,
+    });
+  }
+};
+
+/**
+ * ROUTE: /api/v1/users/search?search=john
+ * METHOD: GET
+ */
+export const searchUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const { search } = req.query;
+
+    if (!search) {
+      return res.status(400).json({
+        success: false,
+        message: "Search term is required!",
+      });
+    }
+
+    const users = await User.find(
+      {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { username: { $regex: search, $options: "i" } },
+        ],
+      },
+      { name: 1, username: 1, profileImage: 1 }
+    );
+
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.error("Error from search user", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      error,
     });
   }
 };

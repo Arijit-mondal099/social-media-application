@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -18,12 +18,65 @@ import { useAppSelector } from "@/hooks/useAppSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { defaultProfileImage } from "@/assets";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { axiosInstance } from "@/lib/axios";
+import throttle from "lodash.throttle";
+
+type User = {
+  name: string;
+  username: string;
+  profileImage: string;
+};
+
+interface SearchResponse {
+  success: boolean;
+  users: User[];
+}
 
 export const ExplorePage = () => {
   const { explore, loading } = useAppSelector((state) => state.post);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchUsers, setSearchUsers] = useState<User[] | null>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const fetchUsersBySearchQuery = useCallback(async (query: string) => {
+    try {
+      const { data } = await axiosInstance.get<SearchResponse>(
+        `/users/search?search=${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setSearchUsers(data?.users);
+      console.log(data);
+    } catch (error) {
+      toast.error("Failed to search user please try again later!");
+      console.log(error);
+    }
+  }, []);
+
+  const throttledSearch = useMemo(
+    () =>
+      throttle((query: string) => {
+        if (query.trim() === "") {
+          toast.error("Please enter a username or name to search for!");
+          setSearchUsers([]);
+          return;
+        }
+
+        fetchUsersBySearchQuery(query);
+      }, 500),
+    [fetchUsersBySearchQuery]
+  );
+
+  const handleSearchInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    throttledSearch(value);
+  };
 
   useEffect(() => {
     dispatch(getExploreContent());
@@ -52,7 +105,7 @@ export const ExplorePage = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-6xl mx-auto px-4 py-6"
+      className="max-w-6xl mx-auto px-4 py-6 relative"
     >
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -67,9 +120,9 @@ export const ExplorePage = () => {
         <div className="relative max-w-2xl">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
-            placeholder="Search for posts, users, or hashtags..."
+            placeholder="Search user by name or username..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchInputChange}
             className="pl-10 h-12 text-base"
           />
         </div>
@@ -227,6 +280,34 @@ export const ExplorePage = () => {
           </motion.div>
         </TabsContent>
       </Tabs>
+
+      {searchQuery.length > 0 && (
+        <motion.div className="absolute left-1/2 top-1/4 transform -translate-x-1/2 z-20 h-96 w-80 bg-white dark:bg-black shadow-2xl rounded-lg border p-3 overflow-y-auto">
+          {searchUsers && searchUsers.length > 0 ? (
+            searchUsers.map((u) => (
+              <div
+                key={u.username}
+                className="flex items-center gap-4 cursor-pointer border-b py-2"
+                onClick={() => navigate(`/profile/${u.username}`)}
+              >
+                <img
+                  src={u.profileImage || defaultProfileImage}
+                  alt={u.name}
+                  className="w-12 h-12 object-cover rounded-full"
+                />
+                <div className="flex flex-col gap-1 text-left">
+                  <p className="text-sm font-semibold">{u.name}</p>
+                  <p className="text-xs font-normal">@{u.username}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center justify-center text-muted-foreground text-center pt-36">
+              User not found with username or name please try another
+            </div>
+          )}
+        </motion.div>
+      )}
     </motion.div>
   );
 };

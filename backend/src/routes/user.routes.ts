@@ -9,6 +9,7 @@ import {
   login,
   register,
   savePost,
+  searchUser,
   toggleFollow,
   updateProfileImage,
   updateProfileInfo,
@@ -23,6 +24,7 @@ router.route("/login").post(login);
 
 router.route("/").get(auth, getProfile);
 router.route("/posts").get(auth, getUserPosts);
+router.route("/search").get( searchUser);
 router.route("/save-posts").put(auth, savePost);
 router.route("/updateprofile-info").put(auth, updateProfileInfo);
 router.route("/updateprofile-image").put(auth, upload.single("image"), updateProfileImage);
